@@ -1,11 +1,5 @@
-import AppLayout from "@/components/layout/AppLayout";
+import { redirect } from "next/navigation";
 
-export default function HomePage() {
-  return (
-    <AppLayout>
-      <h1 className="text-4xl font-bold">
-        Dashboard
-      </h1>
-    </AppLayout>
-  );
+export default function Home() {
+  redirect("/dashboard");
 }

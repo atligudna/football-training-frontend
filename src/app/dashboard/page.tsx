@@ -1,11 +1,11 @@
-import AppLayout from "@/components/layout/AppLayout";
+import AppShell from "@/components/layout/AppShell";
 
 export default function DashboardPage() {
   return (
-    <AppLayout>
-      <h1 className="text-3xl font-bold">
+    <AppShell>
+      <h2 className="text-3xl font-bold">
         Dashboard
-      </h1>
-    </AppLayout>
+      </h2>
+    </AppShell>
   );
 }
