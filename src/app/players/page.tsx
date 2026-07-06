@@ -1,9 +1,9 @@
 import AppShell from "@/components/layout/AppShell";
 
-export default function FieldsPage() {
+export default function PlayersPage() {
   return (
     <AppShell>
-      <h1 className="text-3xl font-bold">Fields</h1>
+      <h1 className="text-3xl font-bold">Players</h1>
     </AppShell>
   );
 }

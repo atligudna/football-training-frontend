@@ -3,16 +3,18 @@ import {
   ChartColumn,
   ClipboardList,
   Goal,
-  LayoutDashboard,
+  Home,
   Package,
   Settings,
+  Users,
+  FolderTree,
 } from "lucide-react";
 
 export const navigation = [
   {
-    title: "Dashboard",
+    title: "Home",
     href: "/dashboard",
-    icon: LayoutDashboard,
+    icon: Home,
   },
   {
     title: "Sessions",
@@ -25,6 +27,11 @@ export const navigation = [
     icon: ClipboardList,
   },
   {
+    title: "Players",
+    href: "/players",
+    icon: Users,
+  },
+  {
     title: "Equipment",
     href: "/equipment",
     icon: Package,
@@ -33,6 +40,11 @@ export const navigation = [
     title: "Fields",
     href: "/fields",
     icon: Goal,
+  },
+  {
+    title: "Categories",
+    href: "/categories",
+    icon: FolderTree,
   },
   {
     title: "Analytics",
