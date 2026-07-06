@@ -1,9 +1,6 @@
 "use client";
 
 import { ReactNode } from "react";
-
-import { SidebarProvider } from "@/components/ui/sidebar";
-
 import ReactQueryProvider from "./ReactQueryProvider";
 
 interface Props {
