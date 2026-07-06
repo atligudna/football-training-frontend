@@ -1,36 +1,54 @@
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
-type ApiOptions = RequestInit & {
+type RequestOptions = {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  body?: unknown;
   token?: string;
 };
 
-export async function api<T>(
+async function request<T>(
   endpoint: string,
-  options: ApiOptions = {}
+  options: RequestOptions = {}
 ): Promise<T> {
-  const token =
-    options.token ??
-    (typeof window !== "undefined"
-      ? localStorage.getItem("token") ?? undefined
-      : undefined);
+  const { method = "GET", body, token } = options;
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && {
-        Authorization: `Bearer ${token}`,
-      }),
-      ...options.headers,
-    },
-  });
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error ?? "Unknown error");
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
 
-  return data;
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const json = await response.json();
+
+  if (!response.ok) {
+    throw new Error(json.error ?? "Unknown error");
+  }
+
+  return json;
 }
+
+export const api = {
+  get: <T>(endpoint: string, token?: string) =>
+    request<T>(endpoint, { method: "GET", token }),
+
+  post: <T>(endpoint: string, body?: unknown, token?: string) =>
+    request<T>(endpoint, { method: "POST", body, token }),
+
+  put: <T>(endpoint: string, body?: unknown, token?: string) =>
+    request<T>(endpoint, { method: "PUT", body, token }),
+
+  patch: <T>(endpoint: string, body?: unknown, token?: string) =>
+    request<T>(endpoint, { method: "PATCH", body, token }),
+
+  delete: <T>(endpoint: string, token?: string) =>
+    request<T>(endpoint, { method: "DELETE", token }),
+};
