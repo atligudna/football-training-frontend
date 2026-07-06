@@ -3,19 +3,21 @@ import { ReactNode } from "react";
 import AppHeader from "./AppHeader";
 import AppSidebar from "./AppSidebar";
 
-interface AppShellProps {
+interface Props {
   children: ReactNode;
 }
 
-export default function AppShell({ children }: AppShellProps) {
+export default function AppShell({ children }: Props) {
   return (
-    <div className="flex min-h-screen bg-muted/30">
+    <div className="flex h-screen overflow-hidden bg-muted/20">
       <AppSidebar />
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <AppHeader />
 
-        <main className="flex-1 p-8">{children}</main>
+        <main className="flex-1 overflow-auto p-6">
+          {children}
+        </main>
       </div>
     </div>
   );
