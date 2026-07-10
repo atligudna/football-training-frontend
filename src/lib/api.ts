@@ -1,3 +1,5 @@
+import { ApiError } from "./errors/ApiError";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
@@ -27,13 +29,21 @@ async function request<T>(
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const json = await response.json();
+  return handleResponse<T>(response);
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(json.error ?? "Unknown error");
+    throw new ApiError(
+      data?.error ?? data?.message ?? "Unknown error",
+      response.status,
+      data
+    );
   }
 
-  return json;
+  return data as T;
 }
 
 export const api = {

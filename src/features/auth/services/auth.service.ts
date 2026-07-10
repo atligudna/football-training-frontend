@@ -1,40 +1,31 @@
 import { api } from "@/lib/api";
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  name: string;
-  email: string;
-  password: string;
-}
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-}
-
-export interface LoginResponse {
-  success: boolean;
-  token: string;
-  user: User;
-}
-
-export interface RegisterResponse {
-  success: boolean;
-  data: User;
-}
+import type {
+  ApiResponse,
+  LoginData,
+  LoginRequest,
+  RegisterRequest,
+  User,
+} from "../types/auth";
 
 export const authService = {
   login(credentials: LoginRequest) {
-    return api.post<LoginResponse>("/auth/login", credentials);
+    return api.post<ApiResponse<LoginData>>(
+      "/auth/login",
+      credentials
+    );
   },
 
   register(user: RegisterRequest) {
-    return api.post<RegisterResponse>("/auth/register", user);
+    return api.post<ApiResponse<User>>(
+      "/auth/register",
+      user
+    );
+  },
+
+  me(token: string) {
+    return api.get<ApiResponse<User>>(
+      "/users/me",
+      token
+    );
   },
 };
