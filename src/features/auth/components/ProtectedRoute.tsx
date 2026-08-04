@@ -28,7 +28,7 @@ export function ProtectedRoute({ children }: Props) {
   if (!initialized) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        Loading...
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }

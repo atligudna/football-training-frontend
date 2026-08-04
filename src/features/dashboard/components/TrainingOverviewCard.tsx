@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 
-import type { TrainingBlock } from "../types/trainingBlock";
+import type { TrainingBlock } from "../../sessions/types/trainingBlock";
 
 const trainingBlocks: TrainingBlock[] = [
   {

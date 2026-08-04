@@ -1,12 +1,17 @@
 "use client";
 
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 
 import { AuthContext } from "../context/AuthContext";
 import { authService } from "../services/auth.service";
 import { authStorage } from "../utils/authStorage";
+import { useRouter } from "next/navigation";
+import type {
+  LoginRequest,
+  User,
+} from "../types/auth";
 
-import type { LoginRequest, User } from "../types/auth";
+import type { AuthContextType } from "../context/AuthContext";
 
 interface Props {
   children: ReactNode;
@@ -17,15 +22,12 @@ export function AuthProvider({ children }: Props) {
   // State
   //
   const [user, setUser] = useState<User | null>(null);
-
-  // loading þegar user smellir á Login
   const [loading, setLoading] = useState(false);
-
-  // loading þegar appið ræsist
   const [initialized, setInitialized] = useState(false);
+  const router = useRouter();
 
   //
-  // Restore session
+  // Restore Session
   //
   useEffect(() => {
     async function restoreSession() {
@@ -37,9 +39,9 @@ export function AuthProvider({ children }: Props) {
       }
 
       try {
-        const response = await authService.me(token);
+        const user = await authService.me(token);
 
-        setUser(response.data);
+        setUser(user.data);
       } catch (error) {
         console.error("Unable to restore session", error);
 
@@ -65,6 +67,11 @@ export function AuthProvider({ children }: Props) {
       authStorage.setToken(response.data.token);
 
       setUser(response.data.user);
+    } catch (error) {
+      authStorage.clearToken();
+      setUser(null);
+
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -73,15 +80,16 @@ export function AuthProvider({ children }: Props) {
   //
   // Logout
   //
-  function logout() {
+  const logout = useCallback(() => {
     authStorage.clearToken();
     setUser(null);
-  }
 
+    router.replace("/login");
+  }, [router]);
   //
   // Context Value
   //
-  const value = useMemo(
+  const value: AuthContextType = useMemo(
     () => ({
       user,
       loading,
@@ -90,7 +98,7 @@ export function AuthProvider({ children }: Props) {
       logout,
       isAuthenticated: user !== null,
     }),
-    [user, loading, initialized]
+    [user, loading, initialized, logout,]
   );
 
   return (

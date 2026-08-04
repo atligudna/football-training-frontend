@@ -1,13 +1,16 @@
 import AppShell from "@/components/layout/AppShell";
+import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute";
 
-export default function AppLayout({
-  children,
-}: {
+interface Props {
   children: React.ReactNode;
-}) {
+}
+
+export default function AppLayout({ children }: Props) {
   return (
-    <AppShell>
-      {children}
-    </AppShell>
+    <ProtectedRoute>
+      <AppShell>
+        {children}
+      </AppShell>
+    </ProtectedRoute>
   );
 }
