@@ -13,8 +13,13 @@ import {
 } from "../utils/training-story-storage";
 import { AddPitchForm } from "./AddPitchForm";
 
-import type { ActivityBlock, Pitch } from "../types/training-story";
+import type {
+    Activity,
+    ActivityBlock,
+    Pitch
+} from "../types/training-story";
 import { AddActivityBlockForm } from "./AddActivityBlockForm";
+import { AddActivityForm } from "./AddActivityForm";
 
 interface TrainingStoryDetailClientProps {
     id: string;
@@ -157,6 +162,61 @@ export function TrainingStoryDetailClient({
                                                     {block.durationMinutes} min
                                                 </p>
                                             </div>
+
+                                            {block.activities.length > 0 && (
+                                                <div className="mt-4 space-y-3">
+                                                    {block.activities.map((activity) => (
+                                                        <div
+                                                            key={activity.id}
+                                                            className="rounded-md border bg-background p-4"
+                                                        >
+                                                            <div className="flex items-start justify-between gap-4">
+                                                                <div>
+                                                                    <p className="font-medium">{activity.title}</p>
+                                                                    <p className="mt-1 text-sm text-muted-foreground">
+                                                                        {activity.description}
+                                                                    </p>
+                                                                </div>
+
+                                                                <div className="text-right text-sm">
+                                                                    <p className="font-medium">{activity.durationMinutes} min</p>
+                                                                    <p className="capitalize text-muted-foreground">
+                                                                        {activity.type}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            {activity.coachingPoints.length > 0 && (
+                                                                <div className="mt-3">
+                                                                    <p className="text-sm font-medium">Coaching points</p>
+                                                                    <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
+                                                                        {activity.coachingPoints.map((point) => (
+                                                                            <li key={point.id}>✓ {point.text}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+
+                                                            {activity.playerFocus.length > 0 && (
+                                                                <div className="mt-3">
+                                                                    <p className="text-sm font-medium">Player focus</p>
+                                                                    <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
+                                                                        {activity.playerFocus.map((focus) => (
+                                                                            <li key={focus.id}>• {focus.text}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <AddActivityForm
+                                                onAddActivity={(activity) =>
+                                                    handleAddActivity(pitch.id, block.id, activity)
+                                                }
+                                            />
                                         </div>
                                     ))}
                                 </div>
@@ -186,6 +246,36 @@ export function TrainingStoryDetailClient({
                     ? {
                         ...pitch,
                         activityBlocks: [...pitch.activityBlocks, activityBlock],
+                    }
+                    : pitch
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        updateTrainingStory(updatedStory);
+        setStory(updatedStory);
+    }
+    function handleAddActivity(
+        pitchId: string,
+        activityBlockId: string,
+        activity: Activity
+    ) {
+        if (!story) return;
+
+        const updatedStory = {
+            ...story,
+            pitches: story.pitches.map((pitch) =>
+                pitch.id === pitchId
+                    ? {
+                        ...pitch,
+                        activityBlocks: pitch.activityBlocks.map((block) =>
+                            block.id === activityBlockId
+                                ? {
+                                    ...block,
+                                    activities: [...block.activities, activity],
+                                }
+                                : block
+                        ),
                     }
                     : pitch
             ),

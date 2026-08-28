@@ -8,3 +8,4 @@ export * from "./utils/training-story-storage";
 export * from "./components/TrainingStoryDetailClient";
 export * from "./components/AddPitchForm";
 export * from "./components/AddActivityBlockForm";
+export * from "./components/AddActivityForm";
