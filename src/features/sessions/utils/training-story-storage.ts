@@ -39,3 +39,17 @@ export function getTrainingStoryById(
 ): TrainingStory | undefined {
   return getAllTrainingStories(baseStories).find((story) => story.id === id);
 }
+
+export function updateTrainingStory(updatedStory: TrainingStory) {
+  const stories = getStoredTrainingStories();
+
+  const exists = stories.some((story) => story.id === updatedStory.id);
+
+  const nextStories = exists
+    ? stories.map((story) =>
+        story.id === updatedStory.id ? updatedStory : story
+      )
+    : [updatedStory, ...stories];
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStories));
+}

@@ -6,3 +6,4 @@ export * from "./components/CreateTrainingStoryForm";
 export * from "./components/TrainingStoriesClient";
 export * from "./utils/training-story-storage";
 export * from "./components/TrainingStoryDetailClient";
+export * from "./components/AddPitchForm";
