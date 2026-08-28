@@ -11,12 +11,14 @@ interface PitchCardProps {
   pitch: Pitch;
   onAddActivityBlock: (activityBlock: ActivityBlock) => void;
   onAddActivity: (activityBlockId: string, activity: Activity) => void;
+  onDeleteActivity: (activityBlockId: string, activityId: string) => void;
 }
 
 export function PitchCard({
   pitch,
   onAddActivityBlock,
   onAddActivity,
+  onDeleteActivity,
 }: PitchCardProps) {
   return (
     <div className="rounded-xl border p-6">
@@ -41,6 +43,9 @@ export function PitchCard({
             block={block}
             onAddActivity={(activity) =>
               onAddActivity(block.id, activity)
+            }
+            onDeleteActivity={(activityId) =>
+              onDeleteActivity(block.id, activityId)
             }
           />
         ))}

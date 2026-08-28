@@ -58,7 +58,10 @@ export function AddActivityBlockForm({
 
       <div className="mt-4 grid gap-4 md:grid-cols-3">
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor={`block-title-${nextOrder}`}>
+          <label
+            className="text-sm font-medium"
+            htmlFor={`block-title-${nextOrder}`}
+          >
             Title
           </label>
 
@@ -73,7 +76,10 @@ export function AddActivityBlockForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium" htmlFor={`block-type-${nextOrder}`}>
+          <label
+            className="text-sm font-medium"
+            htmlFor={`block-type-${nextOrder}`}
+          >
             Type
           </label>
 

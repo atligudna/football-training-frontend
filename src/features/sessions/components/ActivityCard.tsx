@@ -1,10 +1,18 @@
+import { Trash2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+
 import type { Activity } from "../types/training-story";
 
 interface ActivityCardProps {
   activity: Activity;
+  onDeleteActivity?: () => void;
 }
 
-export function ActivityCard({ activity }: ActivityCardProps) {
+export function ActivityCard({
+  activity,
+  onDeleteActivity,
+}: ActivityCardProps) {
   return (
     <div className="rounded-md border bg-background p-4">
       <div className="flex items-start justify-between gap-4">
@@ -16,12 +24,26 @@ export function ActivityCard({ activity }: ActivityCardProps) {
           </p>
         </div>
 
-        <div className="text-right text-sm">
-          <p className="font-medium">{activity.durationMinutes} min</p>
+        <div className="flex items-start gap-3">
+          <div className="text-right text-sm">
+            <p className="font-medium">{activity.durationMinutes} min</p>
 
-          <p className="capitalize text-muted-foreground">
-            {activity.type}
-          </p>
+            <p className="capitalize text-muted-foreground">
+              {activity.type}
+            </p>
+          </div>
+
+          {onDeleteActivity && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onDeleteActivity}
+              aria-label="Delete activity"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 

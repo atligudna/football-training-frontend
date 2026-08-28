@@ -9,11 +9,13 @@ import type {
 interface ActivityBlockCardProps {
   block: ActivityBlock;
   onAddActivity: (activity: Activity) => void;
+  onDeleteActivity: (activityId: string) => void;
 }
 
 export function ActivityBlockCard({
   block,
   onAddActivity,
+  onDeleteActivity,
 }: ActivityBlockCardProps) {
   return (
     <div className="rounded-lg bg-muted p-4">
@@ -34,7 +36,11 @@ export function ActivityBlockCard({
       {block.activities.length > 0 && (
         <div className="mt-4 space-y-3">
           {block.activities.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} />
+            <ActivityCard
+              key={activity.id}
+              activity={activity}
+              onDeleteActivity={() => onDeleteActivity(activity.id)}
+            />
           ))}
         </div>
       )}
