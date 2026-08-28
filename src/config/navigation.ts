@@ -1,18 +1,26 @@
+import type { LucideIcon } from "lucide-react";
+
 import {
-  CalendarDays,
-  ChartColumn,
-  ClipboardList,
-  Goal,
   Home,
-  Package,
-  Settings,
+  CalendarDays,
+  ClipboardList,
   Users,
+  Goal,
+  Package,
   FolderTree,
+  ChartColumn,
+  Settings,
 } from "lucide-react";
 
-export const navigation = [
+export interface NavigationItem {
+  title: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+export const navigation: NavigationItem[] = [
   {
-    title: "Home",
+    title: "Dashboard",
     href: "/dashboard",
     icon: Home,
   },
@@ -32,14 +40,14 @@ export const navigation = [
     icon: Users,
   },
   {
-    title: "Equipment",
-    href: "/equipment",
-    icon: Package,
-  },
-  {
     title: "Fields",
     href: "/fields",
     icon: Goal,
+  },
+  {
+    title: "Equipment",
+    href: "/equipment",
+    icon: Package,
   },
   {
     title: "Categories",
