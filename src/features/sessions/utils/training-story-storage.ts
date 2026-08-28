@@ -1,0 +1,30 @@
+import type { TrainingStory } from "../types/training-story";
+
+const STORAGE_KEY = "football-planner-training-stories";
+
+export function getStoredTrainingStories(): TrainingStory[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    return JSON.parse(raw) as TrainingStory[];
+  } catch {
+    return [];
+  }
+}
+
+export function saveTrainingStory(story: TrainingStory) {
+  const stories = getStoredTrainingStories();
+
+  window.localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify([story, ...stories])
+  );
+}
