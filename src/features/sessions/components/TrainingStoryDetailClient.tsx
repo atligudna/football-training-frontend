@@ -13,7 +13,8 @@ import {
 } from "../utils/training-story-storage";
 import { AddPitchForm } from "./AddPitchForm";
 
-import type { Pitch } from "../types/training-story";
+import type { ActivityBlock, Pitch } from "../types/training-story";
+import { AddActivityBlockForm } from "./AddActivityBlockForm";
 
 interface TrainingStoryDetailClientProps {
     id: string;
@@ -28,13 +29,11 @@ export function TrainingStoryDetailClient({
 
     function handleAddPitch(pitch: Pitch) {
         if (!story) return;
-
         const updatedStory = {
             ...story,
             pitches: [...story.pitches, pitch],
             updatedAt: new Date().toISOString(),
         };
-
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
     }
@@ -161,6 +160,14 @@ export function TrainingStoryDetailClient({
                                         </div>
                                     ))}
                                 </div>
+
+                                <AddActivityBlockForm
+                                    nextOrder={pitch.activityBlocks.length + 1}
+                                    onAddActivityBlock={(activityBlock) =>
+                                        handleAddActivityBlock(pitch.id, activityBlock)
+                                    }
+                                />
+
                             </div>
                         ))}
                     </div>
@@ -168,4 +175,24 @@ export function TrainingStoryDetailClient({
             </section>
         </div>
     );
+
+    function handleAddActivityBlock(pitchId: string, activityBlock: ActivityBlock) {
+        if (!story) return;
+
+        const updatedStory = {
+            ...story,
+            pitches: story.pitches.map((pitch) =>
+                pitch.id === pitchId
+                    ? {
+                        ...pitch,
+                        activityBlocks: [...pitch.activityBlocks, activityBlock],
+                    }
+                    : pitch
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        updateTrainingStory(updatedStory);
+        setStory(updatedStory);
+    }
 }
