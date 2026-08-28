@@ -28,3 +28,14 @@ export function saveTrainingStory(story: TrainingStory) {
     JSON.stringify([story, ...stories])
   );
 }
+
+export function getAllTrainingStories(baseStories: TrainingStory[]): TrainingStory[] {
+  return [...getStoredTrainingStories(), ...baseStories];
+}
+
+export function getTrainingStoryById(
+  id: string,
+  baseStories: TrainingStory[]
+): TrainingStory | undefined {
+  return getAllTrainingStories(baseStories).find((story) => story.id === id);
+}
