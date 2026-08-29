@@ -18,3 +18,6 @@ export * from "./components/EditActivityForm";
 export * from "./components/EditActivityBlockForm";
 export * from "./components/EditPitchForm";
 export * from "./components/EditTrainingStoryForm";
+export * from "./components/TrainingStoryHeader";
+export * from "./components/ObjectivesCard";
+export * from "./components/PitchSection";
