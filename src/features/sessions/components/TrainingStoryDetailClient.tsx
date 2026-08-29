@@ -18,6 +18,7 @@ import type {
     ActivityBlock,
     Pitch
 } from "../types/training-story";
+import { TrainingStorySummaryCards } from "./TrainingStorySummaryCards";
 
 interface TrainingStoryDetailClientProps {
     id: string;
@@ -83,28 +84,7 @@ export function TrainingStoryDetailClient({
                 <p className="mt-2 text-muted-foreground">{story.description}</p>
             </div>
 
-            <section className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-xl border p-5">
-                    <p className="text-sm text-muted-foreground">Duration</p>
-                    <p className="mt-1 text-2xl font-semibold">
-                        {story.durationMinutes} min
-                    </p>
-                </div>
-
-                <div className="rounded-xl border p-5">
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    <p className="mt-1 text-2xl font-semibold capitalize">
-                        {story.status}
-                    </p>
-                </div>
-
-                <div className="rounded-xl border p-5">
-                    <p className="text-sm text-muted-foreground">Pitches</p>
-                    <p className="mt-1 text-2xl font-semibold">
-                        {story.pitches.length}
-                    </p>
-                </div>
-            </section>
+            <TrainingStorySummaryCards story={story} />
 
             <section className="rounded-xl border p-6">
                 <h2 className="text-xl font-semibold">Objectives</h2>

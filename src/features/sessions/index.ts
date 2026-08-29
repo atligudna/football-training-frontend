@@ -12,3 +12,5 @@ export * from "./components/AddActivityForm";
 export * from "./components/ActivityCard";
 export * from "./components/ActivityBlockCard";
 export * from "./components/PitchCard";
+export * from "./components/TrainingStorySummaryCards";
+export * from "./utils/training-story-summary";
