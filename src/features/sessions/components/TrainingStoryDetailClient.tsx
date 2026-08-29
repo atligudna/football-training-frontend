@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +11,7 @@ import { trainingStories } from "../data/training-stories";
 import {
     getTrainingStoryById,
     updateTrainingStory,
+    deleteTrainingStory
 } from "../utils/training-story-storage";
 import { AddPitchForm } from "./AddPitchForm";
 import { PitchCard } from "./PitchCard";
@@ -29,6 +31,7 @@ interface TrainingStoryDetailClientProps {
 export function TrainingStoryDetailClient({
     id,
 }: TrainingStoryDetailClientProps) {
+    const router = useRouter();
     const [story, setStory] = useState(() =>
         getTrainingStoryById(id, trainingStories)
     );
@@ -39,6 +42,18 @@ export function TrainingStoryDetailClient({
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
         setIsEditingStory(false);
+    }
+    function handleDeleteTrainingStory() {
+        if (!story) return;
+
+        const confirmed = window.confirm(
+            `Delete "${story.title}"? This cannot be undone.`
+        );
+
+        if (!confirmed) return;
+
+        deleteTrainingStory(story.id);
+        router.push("/sessions");
     }
     function handleAddPitch(pitch: Pitch) {
         if (!story) return;
@@ -107,14 +122,25 @@ export function TrainingStoryDetailClient({
                         )}
                     </div>
 
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => setIsEditingStory(true)}
-                    >
-                        <Pencil className="h-4 w-4" />
-                        Edit Story
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setIsEditingStory(true)}
+                        >
+                            <Pencil className="h-4 w-4" />
+                            Edit Story
+                        </Button>
+
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={handleDeleteTrainingStory}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                        </Button>
+                    </div>
                 </div>
             )}
 

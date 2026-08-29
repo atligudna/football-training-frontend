@@ -65,3 +65,11 @@ export function updateTrainingStory(updatedStory: TrainingStory) {
 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStories));
 }
+
+export function deleteTrainingStory(storyId: string) {
+  const stories = getStoredTrainingStories();
+
+  const nextStories = stories.filter((story) => story.id !== storyId);
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextStories));
+}
