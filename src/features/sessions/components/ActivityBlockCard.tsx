@@ -15,6 +15,7 @@ interface ActivityBlockCardProps {
   onAddActivity: (activity: Activity) => void;
   onDeleteActivity: (activityId: string) => void;
   onDeleteActivityBlock: () => void;
+  onSaveActivity: (activity: Activity) => void;
 }
 
 export function ActivityBlockCard({
@@ -22,6 +23,7 @@ export function ActivityBlockCard({
   onAddActivity,
   onDeleteActivity,
   onDeleteActivityBlock,
+  onSaveActivity,
 }: ActivityBlockCardProps) {
   return (
     <div className="rounded-lg bg-muted p-4">
@@ -58,6 +60,7 @@ export function ActivityBlockCard({
               key={activity.id}
               activity={activity}
               onDeleteActivity={() => onDeleteActivity(activity.id)}
+              onSaveActivity={onSaveActivity}
             />
           ))}
         </div>

@@ -133,6 +133,9 @@ export function TrainingStoryDetailClient({
                                     handleDeleteActivityBlock(pitch.id, activityBlockId)
                                 }
                                 onDeletePitch={() => handleDeletePitch(pitch.id)}
+                                onSaveActivity={(activityBlockId, activity) =>
+                                    handleSaveActivity(pitch.id, activityBlockId, activity)
+                                }
                             />
                         ))}
                     </div>
@@ -211,6 +214,40 @@ export function TrainingStoryDetailClient({
                                     ...block,
                                     activities: block.activities.filter(
                                         (activity) => activity.id !== activityId
+                                    ),
+                                }
+                                : block
+                        ),
+                    }
+                    : pitch
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        updateTrainingStory(updatedStory);
+        setStory(updatedStory);
+    }
+    function handleSaveActivity(
+        pitchId: string,
+        activityBlockId: string,
+        updatedActivity: Activity
+    ) {
+        if (!story) return;
+
+        const updatedStory = {
+            ...story,
+            pitches: story.pitches.map((pitch) =>
+                pitch.id === pitchId
+                    ? {
+                        ...pitch,
+                        activityBlocks: pitch.activityBlocks.map((block) =>
+                            block.id === activityBlockId
+                                ? {
+                                    ...block,
+                                    activities: block.activities.map((activity) =>
+                                        activity.id === updatedActivity.id
+                                            ? updatedActivity
+                                            : activity
                                     ),
                                 }
                                 : block
