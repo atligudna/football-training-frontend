@@ -120,6 +120,8 @@ export function TrainingStoryDetailClient({
                             <PitchCard
                                 key={pitch.id}
                                 pitch={pitch}
+                                existingPitches={story.pitches}
+                                onSavePitch={handleSavePitch}
                                 onAddActivityBlock={(activityBlock) =>
                                     handleAddActivityBlock(pitch.id, activityBlock)
                                 }
@@ -283,6 +285,20 @@ export function TrainingStoryDetailClient({
                         ),
                     }
                     : pitch
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        updateTrainingStory(updatedStory);
+        setStory(updatedStory);
+    }
+    function handleSavePitch(updatedPitch: Pitch) {
+        if (!story) return;
+
+        const updatedStory = {
+            ...story,
+            pitches: story.pitches.map((pitch) =>
+                pitch.id === updatedPitch.id ? updatedPitch : pitch
             ),
             updatedAt: new Date().toISOString(),
         };

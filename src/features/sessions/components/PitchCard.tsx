@@ -1,9 +1,13 @@
-import { Trash2 } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 import { AddActivityBlockForm } from "./AddActivityBlockForm";
 import { ActivityBlockCard } from "./ActivityBlockCard";
+import { EditPitchForm } from "./EditPitchForm";
 
 import type {
   Activity,
@@ -13,17 +17,20 @@ import type {
 
 interface PitchCardProps {
   pitch: Pitch;
+  existingPitches: Pitch[];
   onAddActivityBlock: (activityBlock: ActivityBlock) => void;
   onAddActivity: (activityBlockId: string, activity: Activity) => void;
   onDeleteActivity: (activityBlockId: string, activityId: string) => void;
   onDeleteActivityBlock: (activityBlockId: string) => void;
-  onSaveActivity: (activityBlockId: string, activity: Activity) => void;
   onDeletePitch: () => void;
+  onSaveActivity: (activityBlockId: string, activity: Activity) => void;
   onSaveActivityBlock: (activityBlock: ActivityBlock) => void;
+  onSavePitch: (pitch: Pitch) => void;
 }
 
 export function PitchCard({
   pitch,
+  existingPitches,
   onAddActivityBlock,
   onAddActivity,
   onDeleteActivity,
@@ -31,7 +38,24 @@ export function PitchCard({
   onDeletePitch,
   onSaveActivity,
   onSaveActivityBlock,
+  onSavePitch,
 }: PitchCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
+
+  if (isEditing) {
+    return (
+      <EditPitchForm
+        pitch={pitch}
+        existingPitches={existingPitches}
+        onSavePitch={(updatedPitch) => {
+          onSavePitch(updatedPitch);
+          setIsEditing(false);
+        }}
+        onCancel={() => setIsEditing(false)}
+      />
+    );
+  }
+
   return (
     <div className="rounded-xl border p-6">
       <div className="flex items-start justify-between gap-4">
@@ -49,15 +73,27 @@ export function PitchCard({
           )}
         </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onDeletePitch}
-          aria-label="Delete pitch"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex items-start gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsEditing(true)}
+            aria-label="Edit pitch"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onDeletePitch}
+            aria-label="Delete pitch"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="mt-5 space-y-3">
@@ -74,7 +110,7 @@ export function PitchCard({
             onDeleteActivityBlock={() =>
               onDeleteActivityBlock(block.id)
             }
-            onSaveActivity={(activity) => 
+            onSaveActivity={(activity) =>
               onSaveActivity(block.id, activity)
             }
             onSaveActivityBlock={onSaveActivityBlock}
