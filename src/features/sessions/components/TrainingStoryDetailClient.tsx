@@ -149,6 +149,9 @@ export function TrainingStoryDetailClient({
                                 onDeleteActivity={(activityBlockId, activityId) =>
                                     handleDeleteActivity(pitch.id, activityBlockId, activityId)
                                 }
+                                onDeleteActivityBlock={(activityBlockId) =>
+                                    handleDeleteActivityBlock(pitch.id, activityBlockId)
+                                }
                             />
                         ))}
                     </div>
@@ -176,6 +179,7 @@ export function TrainingStoryDetailClient({
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
     }
+
     function handleAddActivity(
         pitchId: string,
         activityBlockId: string,
@@ -206,6 +210,7 @@ export function TrainingStoryDetailClient({
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
     }
+
     function handleDeleteActivity(
         pitchId: string,
         activityBlockId: string,
@@ -238,4 +243,30 @@ export function TrainingStoryDetailClient({
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
     }
+
+    function handleDeleteActivityBlock(
+        pitchId: string,
+        activityBlockId: string
+    ) {
+        if (!story) return;
+
+        const updatedStory = {
+            ...story,
+            pitches: story.pitches.map((pitch) =>
+                pitch.id === pitchId
+                    ? {
+                        ...pitch,
+                        activityBlocks: pitch.activityBlocks.filter(
+                            (block) => block.id !== activityBlockId
+                        ),
+                    }
+                    : pitch
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        updateTrainingStory(updatedStory);
+        setStory(updatedStory);
+    }
+
 }
