@@ -152,6 +152,7 @@ export function TrainingStoryDetailClient({
                                 onDeleteActivityBlock={(activityBlockId) =>
                                     handleDeleteActivityBlock(pitch.id, activityBlockId)
                                 }
+                                onDeletePitch={() => handleDeletePitch(pitch.id)}
                             />
                         ))}
                     </div>
@@ -268,5 +269,16 @@ export function TrainingStoryDetailClient({
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
     }
+    function handleDeletePitch(pitchId: string) {
+        if (!story) return;
 
+        const updatedStory = {
+            ...story,
+            pitches: story.pitches.filter((pitch) => pitch.id !== pitchId),
+            updatedAt: new Date().toISOString(),
+        };
+
+        updateTrainingStory(updatedStory);
+        setStory(updatedStory);
+    }
 }
