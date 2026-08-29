@@ -17,3 +17,4 @@ export * from "./utils/training-story-summary";
 export * from "./components/EditActivityForm";
 export * from "./components/EditActivityBlockForm";
 export * from "./components/EditPitchForm";
+export * from "./components/EditTrainingStoryForm";

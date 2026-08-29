@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -16,9 +16,11 @@ import { PitchCard } from "./PitchCard";
 import type {
     Activity,
     ActivityBlock,
-    Pitch
+    Pitch,
+    TrainingStory
 } from "../types/training-story";
 import { TrainingStorySummaryCards } from "./TrainingStorySummaryCards";
+import { EditTrainingStoryForm } from "./EditTrainingStoryForm";
 
 interface TrainingStoryDetailClientProps {
     id: string;
@@ -30,7 +32,14 @@ export function TrainingStoryDetailClient({
     const [story, setStory] = useState(() =>
         getTrainingStoryById(id, trainingStories)
     );
+    const [isEditingStory, setIsEditingStory] = useState(false);
 
+
+    function handleSaveTrainingStory(updatedStory: TrainingStory) {
+        updateTrainingStory(updatedStory);
+        setStory(updatedStory);
+        setIsEditingStory(false);
+    }
     function handleAddPitch(pitch: Pitch) {
         if (!story) return;
         const updatedStory = {
@@ -72,17 +81,42 @@ export function TrainingStoryDetailClient({
                 </Link>
             </div>
 
-            <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                    {story.ageGroup}
-                </p>
+            {isEditingStory ? (
+                <EditTrainingStoryForm
+                    story={story}
+                    onSaveTrainingStory={handleSaveTrainingStory}
+                    onCancel={() => setIsEditingStory(false)}
+                />
+            ) : (
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <p className="text-sm font-medium text-muted-foreground">
+                            {story.ageGroup}
+                        </p>
 
-                <h1 className="mt-1 text-3xl font-bold tracking-tight">
-                    {story.title}
-                </h1>
+                        <h1 className="mt-1 text-3xl font-bold tracking-tight">
+                            {story.title}
+                        </h1>
 
-                <p className="mt-2 text-muted-foreground">{story.description}</p>
-            </div>
+                        <p className="mt-2 text-muted-foreground">{story.description}</p>
+
+                        {story.theme && (
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                Theme: {story.theme}
+                            </p>
+                        )}
+                    </div>
+
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setIsEditingStory(true)}
+                    >
+                        <Pencil className="h-4 w-4" />
+                        Edit Story
+                    </Button>
+                </div>
+            )}
 
             <TrainingStorySummaryCards story={story} />
 
