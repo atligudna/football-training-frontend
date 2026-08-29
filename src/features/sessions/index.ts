@@ -15,3 +15,4 @@ export * from "./components/PitchCard";
 export * from "./components/TrainingStorySummaryCards";
 export * from "./utils/training-story-summary";
 export * from "./components/EditActivityForm";
+export * from "./components/EditActivityBlockForm";

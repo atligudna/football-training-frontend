@@ -1,9 +1,13 @@
-import { Trash2 } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 import { AddActivityForm } from "./AddActivityForm";
 import { ActivityCard } from "./ActivityCard";
+import { EditActivityBlockForm } from "./EditActivityBlockForm";
 
 import type {
   Activity,
@@ -16,6 +20,7 @@ interface ActivityBlockCardProps {
   onDeleteActivity: (activityId: string) => void;
   onDeleteActivityBlock: () => void;
   onSaveActivity: (activity: Activity) => void;
+  onSaveActivityBlock: (activityBlock: ActivityBlock) => void;
 }
 
 export function ActivityBlockCard({
@@ -24,7 +29,23 @@ export function ActivityBlockCard({
   onDeleteActivity,
   onDeleteActivityBlock,
   onSaveActivity,
+  onSaveActivityBlock,
 }: ActivityBlockCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
+
+  if (isEditing) {
+    return (
+      <EditActivityBlockForm
+        block={block}
+        onSaveActivityBlock={(updatedBlock) => {
+          onSaveActivityBlock(updatedBlock);
+          setIsEditing(false);
+        }}
+        onCancel={() => setIsEditing(false)}
+      />
+    );
+  }
+
   return (
     <div className="rounded-lg bg-muted p-4">
       <div className="flex items-start justify-between gap-4">
@@ -40,6 +61,16 @@ export function ActivityBlockCard({
           <p className="text-sm font-medium">
             {block.durationMinutes} min
           </p>
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsEditing(true)}
+            aria-label="Edit activity block"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
 
           <Button
             type="button"

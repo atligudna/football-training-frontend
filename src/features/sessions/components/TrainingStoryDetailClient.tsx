@@ -136,6 +136,9 @@ export function TrainingStoryDetailClient({
                                 onSaveActivity={(activityBlockId, activity) =>
                                     handleSaveActivity(pitch.id, activityBlockId, activity)
                                 }
+                                onSaveActivityBlock={(activityBlock) =>
+                                    handleSaveActivityBlock(pitch.id, activityBlock)
+                                }
                             />
                         ))}
                     </div>
@@ -261,7 +264,32 @@ export function TrainingStoryDetailClient({
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
     }
+    function handleSaveActivityBlock(
+        pitchId: string,
+        updatedActivityBlock: ActivityBlock
+    ) {
+        if (!story) return;
 
+        const updatedStory = {
+            ...story,
+            pitches: story.pitches.map((pitch) =>
+                pitch.id === pitchId
+                    ? {
+                        ...pitch,
+                        activityBlocks: pitch.activityBlocks.map((block) =>
+                            block.id === updatedActivityBlock.id
+                                ? updatedActivityBlock
+                                : block
+                        ),
+                    }
+                    : pitch
+            ),
+            updatedAt: new Date().toISOString(),
+        };
+
+        updateTrainingStory(updatedStory);
+        setStory(updatedStory);
+    }
     function handleDeleteActivityBlock(
         pitchId: string,
         activityBlockId: string
@@ -298,4 +326,5 @@ export function TrainingStoryDetailClient({
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
     }
+
 }
