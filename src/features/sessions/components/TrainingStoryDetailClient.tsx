@@ -35,12 +35,15 @@ export function TrainingStoryDetailClient({
     const [story, setStory] = useState(() =>
         getTrainingStoryById(id, trainingStories)
     );
+    function saveStory(updatedStory: TrainingStory) {
+        updateTrainingStory(updatedStory);
+        setStory(updatedStory);
+    }
     const [isEditingStory, setIsEditingStory] = useState(false);
 
 
     function handleSaveTrainingStory(updatedStory: TrainingStory) {
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
         setIsEditingStory(false);
     }
     function handleDeleteTrainingStory() {
@@ -62,8 +65,7 @@ export function TrainingStoryDetailClient({
             pitches: [...story.pitches, pitch],
             updatedAt: new Date().toISOString(),
         };
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
     }
     if (!story) {
         return (
@@ -225,8 +227,7 @@ export function TrainingStoryDetailClient({
             updatedAt: new Date().toISOString(),
         };
 
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
     }
 
     function handleAddActivity(
@@ -256,8 +257,7 @@ export function TrainingStoryDetailClient({
             updatedAt: new Date().toISOString(),
         };
 
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
     }
 
     function handleDeleteActivity(
@@ -289,8 +289,7 @@ export function TrainingStoryDetailClient({
             updatedAt: new Date().toISOString(),
         };
 
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
     }
     function handleSaveActivity(
         pitchId: string,
@@ -323,8 +322,7 @@ export function TrainingStoryDetailClient({
             updatedAt: new Date().toISOString(),
         };
 
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
     }
     function handleSaveActivityBlock(
         pitchId: string,
@@ -349,8 +347,7 @@ export function TrainingStoryDetailClient({
             updatedAt: new Date().toISOString(),
         };
 
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
     }
     function handleSavePitch(updatedPitch: Pitch) {
         if (!story) return;
@@ -362,9 +359,7 @@ export function TrainingStoryDetailClient({
             ),
             updatedAt: new Date().toISOString(),
         };
-
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
     }
     function handleDeleteActivityBlock(
         pitchId: string,
@@ -387,8 +382,7 @@ export function TrainingStoryDetailClient({
             updatedAt: new Date().toISOString(),
         };
 
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
     }
     function handleDeletePitch(pitchId: string) {
         if (!story) return;
@@ -399,8 +393,7 @@ export function TrainingStoryDetailClient({
             updatedAt: new Date().toISOString(),
         };
 
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
+        saveStory(updatedStory);
     }
 
 }
