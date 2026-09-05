@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -40,11 +40,14 @@ export function TrainingStoryDetailClient({
     const [isEditingStory, setIsEditingStory] = useState(false);
     const [undoSnapshot, setUndoSnapshot] = useState<TrainingStory | null>(null);
     const [undoMessage, setUndoMessage] = useState("");
+    const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     function saveStory(updatedStory: TrainingStory) {
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
     }
+
+
     function confirmDelete(message: string) {
         return window.confirm(message);
     }
@@ -58,9 +61,14 @@ export function TrainingStoryDetailClient({
         setUndoSnapshot(previousStory);
         setUndoMessage(message);
 
-        window.setTimeout(() => {
+        if (undoTimerRef.current) {
+            clearTimeout(undoTimerRef.current);
+        }
+
+        undoTimerRef.current = setTimeout(() => {
             setUndoSnapshot(null);
             setUndoMessage("");
+            undoTimerRef.current = null;
         }, 3000);
     }
 
@@ -70,8 +78,12 @@ export function TrainingStoryDetailClient({
         saveStory(undoSnapshot);
         setUndoSnapshot(null);
         setUndoMessage("");
-    }
 
+        if (undoTimerRef.current) {
+            clearTimeout(undoTimerRef.current);
+            undoTimerRef.current = null;
+        }
+    }
     function handleSaveTrainingStory(updatedStory: TrainingStory) {
         saveStory(updatedStory);
         setIsEditingStory(false);
@@ -364,7 +376,7 @@ export function TrainingStoryDetailClient({
 
             <TrainingStorySummaryCards story={story} />
             {undoSnapshot && (
-                <div className="flex items-center justify-between rounded-lg border bg-muted px-4 py-3">
+                <div className="fixed bottom-6 right-6 z-50 flex min-w-80 items-center justify-between gap-4 rounded-lg border bg-background px-4 py-3 shadow-lg">
                     <p className="text-sm font-medium">{undoMessage}</p>
 
                     <Button type="button" variant="secondary" onClick={handleUndoDelete}>
@@ -372,6 +384,7 @@ export function TrainingStoryDetailClient({
                     </Button>
                 </div>
             )}
+            
             <ObjectivesCard story={story} />
 
             <PitchSection
