@@ -38,10 +38,38 @@ export function TrainingStoryDetailClient({
         getTrainingStoryById(id, trainingStories)
     );
     const [isEditingStory, setIsEditingStory] = useState(false);
+    const [undoSnapshot, setUndoSnapshot] = useState<TrainingStory | null>(null);
+    const [undoMessage, setUndoMessage] = useState("");
 
     function saveStory(updatedStory: TrainingStory) {
         updateTrainingStory(updatedStory);
         setStory(updatedStory);
+    }
+    function confirmDelete(message: string) {
+        return window.confirm(message);
+    }
+
+    function saveStoryWithUndo(
+        updatedStory: TrainingStory,
+        previousStory: TrainingStory,
+        message: string
+    ) {
+        saveStory(updatedStory);
+        setUndoSnapshot(previousStory);
+        setUndoMessage(message);
+
+        window.setTimeout(() => {
+            setUndoSnapshot(null);
+            setUndoMessage("");
+        }, 3000);
+    }
+
+    function handleUndoDelete() {
+        if (!undoSnapshot) return;
+
+        saveStory(undoSnapshot);
+        setUndoSnapshot(null);
+        setUndoMessage("");
     }
 
     function handleSaveTrainingStory(updatedStory: TrainingStory) {
@@ -90,14 +118,24 @@ export function TrainingStoryDetailClient({
 
     function handleDeletePitch(pitchId: string) {
         if (!story) return;
+        const confirmed = confirmDelete(
+            "Are you sure you want to delete this pitch? All blocks and activities inside it will also be deleted."
+        );
 
+        if (!confirmed) return;
+
+        const previousStory = story;
         const updatedStory = {
             ...story,
             pitches: story.pitches.filter((pitch) => pitch.id !== pitchId),
             updatedAt: new Date().toISOString(),
         };
 
-        saveStory(updatedStory);
+        saveStoryWithUndo(
+            updatedStory,
+            previousStory,
+            "Pitch deleted"
+        );
     }
 
     function handleAddActivityBlock(
@@ -153,7 +191,13 @@ export function TrainingStoryDetailClient({
         activityBlockId: string
     ) {
         if (!story) return;
+        const confirmed = confirmDelete(
+            "Are you sure you want to delete this activity block? All activities inside it will also be deleted."
+        );
 
+        if (!confirmed) return;
+
+        const previousStory = story;
         const updatedStory = {
             ...story,
             pitches: story.pitches.map((pitch) =>
@@ -169,7 +213,11 @@ export function TrainingStoryDetailClient({
             updatedAt: new Date().toISOString(),
         };
 
-        saveStory(updatedStory);
+        saveStoryWithUndo(
+            updatedStory,
+            previousStory,
+            "Activity block deleted"
+        );
     }
 
     function handleAddActivity(
@@ -242,7 +290,13 @@ export function TrainingStoryDetailClient({
         activityId: string
     ) {
         if (!story) return;
+        const confirmed = confirmDelete(
+            "Are you sure you want to delete this activity?"
+        );
 
+        if (!confirmed) return;
+
+        const previousStory = story;
         const updatedStory = {
             ...story,
             pitches: story.pitches.map((pitch) =>
@@ -265,7 +319,11 @@ export function TrainingStoryDetailClient({
             updatedAt: new Date().toISOString(),
         };
 
-        saveStory(updatedStory);
+        saveStoryWithUndo(
+            updatedStory,
+            previousStory,
+            "Activity deleted"
+        );
     }
 
     if (!story) {
@@ -305,7 +363,15 @@ export function TrainingStoryDetailClient({
             )}
 
             <TrainingStorySummaryCards story={story} />
+            {undoSnapshot && (
+                <div className="flex items-center justify-between rounded-lg border bg-muted px-4 py-3">
+                    <p className="text-sm font-medium">{undoMessage}</p>
 
+                    <Button type="button" variant="secondary" onClick={handleUndoDelete}>
+                        Undo
+                    </Button>
+                </div>
+            )}
             <ObjectivesCard story={story} />
 
             <PitchSection
