@@ -21,3 +21,4 @@ export * from "./components/EditTrainingStoryForm";
 export * from "./components/TrainingStoryHeader";
 export * from "./components/ObjectivesCard";
 export * from "./components/PitchSection";
+export * from "./utils/equipment-parser";

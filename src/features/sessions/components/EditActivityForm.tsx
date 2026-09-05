@@ -1,5 +1,8 @@
 "use client";
-
+import {
+  formatEquipmentForTextarea,
+  parseEquipmentText,
+} from "../utils/equipment-parser";
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -24,12 +27,6 @@ function listToText(items: { text: string }[]) {
   return items.map((item) => item.text).join("\n");
 }
 
-function equipmentToText(items: Activity["equipment"]) {
-  return items
-    .map((item) => `${item.name}, ${item.quantity}`)
-    .join("\n");
-}
-
 export function EditActivityForm({
   activity,
   onSaveActivity,
@@ -48,7 +45,7 @@ export function EditActivityForm({
     listToText(activity.playerFocus)
   );
   const [equipmentText, setEquipmentText] = useState(
-    equipmentToText(activity.equipment)
+    formatEquipmentForTextarea(activity.equipment)
   );
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -76,19 +73,7 @@ export function EditActivityForm({
           id: crypto.randomUUID(),
           text,
         })),
-      equipment: equipmentText
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line) => {
-          const [namePart, quantityPart] = line.split(",");
-
-          return {
-            id: crypto.randomUUID(),
-            name: namePart.trim(),
-            quantity: Number(quantityPart?.trim() || 1),
-          };
-        }),
+      equipment: parseEquipmentText(equipmentText),
     };
 
     onSaveActivity(updatedActivity);
@@ -217,12 +202,12 @@ export function EditActivityForm({
           id={`edit-equipment-${activity.id}`}
           value={equipmentText}
           onChange={(event) => setEquipmentText(event.target.value)}
-          placeholder={"Balls, 8\nCones, 12"}
+          placeholder={"Balls: 8\nCones: 12"}
           className="min-h-24 w-full rounded-md border bg-background px-3 py-2 text-sm"
         />
 
         <p className="text-xs text-muted-foreground">
-          One item per line. Use format: name, quantity.
+          One item per line. Use format: name: quantity.
         </p>
       </div>
 

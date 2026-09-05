@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-
+import { parseEquipmentText } from "../utils/equipment-parser";
 import { Button } from "@/components/ui/button";
 
 import type { Activity, ActivityType } from "../types/training-story";
@@ -30,19 +30,7 @@ export function AddActivityForm({ onAddActivity }: AddActivityFormProps) {
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        const equipment = equipmentText
-            .split("\n")
-            .map((line) => line.trim())
-            .filter(Boolean)
-            .map((line) => {
-                const [namePart, quantityPart] = line.split(",");
-
-                return {
-                    id: crypto.randomUUID(),
-                    name: namePart.trim(),
-                    quantity: Number(quantityPart?.trim() || 1),
-                };
-            });
+        const equipment = parseEquipmentText(equipmentText);
         const activity: Activity = {
             id: crypto.randomUUID(),
             title,
@@ -215,12 +203,12 @@ export function AddActivityForm({ onAddActivity }: AddActivityFormProps) {
                     id="activity-equipment"
                     value={equipmentText}
                     onChange={(event) => setEquipmentText(event.target.value)}
-                    placeholder={"Balls, 8\nCones, 12\nBibs, 10"}
+                    placeholder={"Balls: 8\nCones: 12\nBibs: 10"}
                     className="min-h-24 w-full rounded-md border bg-background px-3 py-2 text-sm"
                 />
 
                 <p className="text-xs text-muted-foreground">
-                    One item per line. Use format: name, quantity.
+                    One item per line. Use format: name: quantity.
                 </p>
             </div>
 
