@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-
+import { duplicateTrainingStory } from "../utils/duplicate-training-story";
 import { trainingStories } from "../data/training-stories";
 import {
     deleteTrainingStory,
@@ -84,9 +84,21 @@ export function TrainingStoryDetailClient({
             undoTimerRef.current = null;
         }
     }
+    
     function handleSaveTrainingStory(updatedStory: TrainingStory) {
         saveStory(updatedStory);
         setIsEditingStory(false);
+    }
+    
+    function handleDuplicateTrainingStory() {
+        if (!story) return;
+
+        const duplicatedStory = duplicateTrainingStory(story);
+
+        saveStory(duplicatedStory);
+        setIsEditingStory(false);
+
+        router.push(`/sessions/${duplicatedStory.id}`);
     }
 
     function handleDeleteTrainingStory() {
@@ -370,6 +382,7 @@ export function TrainingStoryDetailClient({
                 <TrainingStoryHeader
                     story={story}
                     onEdit={() => setIsEditingStory(true)}
+                    onDuplicate={handleDuplicateTrainingStory}
                     onDelete={handleDeleteTrainingStory}
                 />
             )}
@@ -384,7 +397,7 @@ export function TrainingStoryDetailClient({
                     </Button>
                 </div>
             )}
-            
+
             <ObjectivesCard story={story} />
 
             <PitchSection

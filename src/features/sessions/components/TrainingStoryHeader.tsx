@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -8,12 +8,14 @@ import type { TrainingStory } from "../types/training-story";
 interface TrainingStoryHeaderProps {
   story: TrainingStory;
   onEdit: () => void;
+  onDuplicate: () => void;
   onDelete: () => void;
 }
 
 export function TrainingStoryHeader({
   story,
   onEdit,
+  onDuplicate,
   onDelete,
 }: TrainingStoryHeaderProps) {
   return (
@@ -51,7 +53,10 @@ export function TrainingStoryHeader({
             <Pencil className="h-4 w-4" />
             Edit Story
           </Button>
-
+          <Button type="button" variant="secondary" onClick={onDuplicate}>
+            <Copy className="h-4 w-4" />
+            Duplicate
+          </Button>
           <Button type="button" variant="ghost" onClick={onDelete}>
             <Trash2 className="h-4 w-4" />
             Delete

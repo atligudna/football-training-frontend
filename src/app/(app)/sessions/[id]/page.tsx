@@ -11,5 +11,5 @@ export default async function TrainingStoryDetailPage({
 }: TrainingStoryDetailPageProps) {
   const { id } = await params;
 
-  return <TrainingStoryDetailClient id={id} />;
+  return <TrainingStoryDetailClient key={id} id={id} />;
 }
