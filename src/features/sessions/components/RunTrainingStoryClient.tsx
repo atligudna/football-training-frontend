@@ -11,7 +11,11 @@ import {
     Play,
     RotateCcw,
 } from "lucide-react";
-
+import {
+    clearRunProgress,
+    getRunProgress,
+    saveRunProgress,
+} from "../utils/run-progress-storage";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { trainingStories } from "../data/training-stories";
@@ -46,6 +50,14 @@ function getRunActivities(story: TrainingStory): RunActivityItem[] {
     );
 }
 
+function getInitialSeconds(story: TrainingStory | undefined) {
+    if (!story) return 0;
+
+    const firstActivity = getRunActivities(story)[0];
+
+    return firstActivity ? firstActivity.activity.durationMinutes * 60 : 0;
+}
+
 function formatSeconds(totalSeconds: number) {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -56,13 +68,19 @@ function formatSeconds(totalSeconds: number) {
 export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
     const router = useRouter();
     const [story] = useState(() => getTrainingStoryById(id, trainingStories));
-    const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
+    const [currentActivityIndex, setCurrentActivityIndex] = useState(() => {
+        if (!story) return 0;
+
+        const progress = getRunProgress(story.id);
+
+        return progress?.currentActivityIndex ?? 0;
+    });
     const [secondsRemaining, setSecondsRemaining] = useState(() => {
         if (!story) return 0;
 
-        const firstActivity = getRunActivities(story)[0];
+        const progress = getRunProgress(story.id);
 
-        return firstActivity ? firstActivity.activity.durationMinutes * 60 : 0;
+        return progress?.secondsRemaining ?? getInitialSeconds(story);
     });
     const [isTimerRunning, setIsTimerRunning] = useState(false);
 
@@ -93,6 +111,12 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
             const nextSeconds = Math.max(secondsRemaining - 1, 0);
 
             setSecondsRemaining(nextSeconds);
+            if (story) {
+                saveRunProgress(story.id, {
+                    currentActivityIndex,
+                    secondsRemaining: nextSeconds,
+                });
+            }
 
             if (nextSeconds === 0) {
                 setIsTimerRunning(false);
@@ -100,7 +124,7 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         }, 1000);
 
         return () => window.clearTimeout(timeoutId);
-    }, [isTimerRunning, secondsRemaining]);
+    }, [isTimerRunning, secondsRemaining, story, currentActivityIndex]);
 
     if (!story) {
         return (
@@ -142,11 +166,17 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
 
     function resetTimerForActivity(index: number) {
         const activity = runActivities[index];
+        const nextSeconds = activity ? activity.activity.durationMinutes * 60 : 0;
 
-        setSecondsRemaining(
-            activity ? activity.activity.durationMinutes * 60 : 0
-        );
+        setSecondsRemaining(nextSeconds);
         setIsTimerRunning(false);
+
+        if (story) {
+            saveRunProgress(story.id, {
+                currentActivityIndex: index,
+                secondsRemaining: nextSeconds,
+            });
+        }
     }
     function handlePreviousActivity() {
         const nextIndex = Math.max(currentActivityIndex - 1, 0);
@@ -166,10 +196,17 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
     }
 
     function handleResetTimer() {
-        if (!currentActivity) return;
+        if (!currentActivity || !story) return;
 
-        setSecondsRemaining(currentActivity.activity.durationMinutes * 60);
+        const nextSeconds = currentActivity.activity.durationMinutes * 60;
+
+        setSecondsRemaining(nextSeconds);
         setIsTimerRunning(false);
+
+        saveRunProgress(story.id, {
+            currentActivityIndex,
+            secondsRemaining: nextSeconds,
+        });
     }
 
     function handleFinishTraining() {
@@ -182,6 +219,7 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         };
 
         updateTrainingStory(completedStory);
+        clearRunProgress(story.id);
         router.push(`/sessions/${story.id}/review`);
     }
 

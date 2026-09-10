@@ -28,3 +28,4 @@ export * from "./components/TrainingStoryReviewClient";
 export * from "./components/TrainingReviewCard";
 export * from "./components/CompletedTrainingHistoryClient";
 export * from "./components/TrainingDashboardClient";
+export * from "./utils/run-progress-storage";
