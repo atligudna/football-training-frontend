@@ -167,11 +167,35 @@ export function TrainingStoriesClient() {
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Showing {filteredStories.length} of {stories.length} training stories.
-      </p>
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          Showing {filteredStories.length} of {stories.length} training stories.
+        </p>
 
-      <TrainingStoryList stories={filteredStories} />
+        {(searchText || statusFilter !== "all") && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearchText("");
+              setStatusFilter("all");
+            }}
+            className="text-sm font-medium underline-offset-4 hover:underline"
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      {filteredStories.length === 0 ? (
+        <div className="rounded-xl border border-dashed p-10 text-center">
+          <h2 className="text-xl font-semibold">No training stories found</h2>
+          <p className="mt-2 text-muted-foreground">
+            Try changing your search text or status filter.
+          </p>
+        </div>
+      ) : (
+        <TrainingStoryList stories={filteredStories} />
+      )}
     </div>
   );
 }
