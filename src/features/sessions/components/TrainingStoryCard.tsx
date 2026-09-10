@@ -1,15 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import {
   ClipboardCheck,
   Clock,
+  Copy,
   Layers,
   Play,
   Star,
   Target,
 } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
-
+import { duplicateTrainingStory } from "../utils/duplicate-training-story";
+import { saveTrainingStory } from "../utils/training-story-storage";
 import type { TrainingStory } from "../types/training-story";
 
 interface TrainingStoryCardProps {
@@ -26,6 +30,14 @@ function formatCompletedAt(dateString: string) {
 }
 
 export function TrainingStoryCard({ story }: TrainingStoryCardProps) {
+  const router = useRouter();
+
+  function handleDuplicateStory() {
+    const duplicatedStory = duplicateTrainingStory(story);
+
+    saveTrainingStory(duplicatedStory);
+    router.push(`/sessions/${duplicatedStory.id}`);
+  }
   const pitchCount = story.pitches.length;
   const blockCount = story.pitches.reduce(
     (total, pitch) => total + pitch.activityBlocks.length,
@@ -84,8 +96,8 @@ export function TrainingStoryCard({ story }: TrainingStoryCardProps) {
                   <Star
                     key={index}
                     className={`h-4 w-4 ${index < story.review!.overallRating
-                        ? "fill-current"
-                        : "text-muted-foreground"
+                      ? "fill-current"
+                      : "text-muted-foreground"
                       }`}
                   />
                 ))}
@@ -123,6 +135,14 @@ export function TrainingStoryCard({ story }: TrainingStoryCardProps) {
           Open
         </Link>
 
+        <button
+          type="button"
+          onClick={handleDuplicateStory}
+          className={`${actionLinkBase} bg-secondary text-secondary-foreground hover:bg-secondary/80`}
+        >
+          <Copy className="h-4 w-4" />
+          Duplicate
+        </button>
         <Link
           href={`/sessions/${story.id}/run`}
           className={`${actionLinkBase} bg-primary text-primary-foreground hover:bg-primary/90`}
