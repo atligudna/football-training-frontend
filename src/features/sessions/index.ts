@@ -29,3 +29,6 @@ export * from "./components/TrainingReviewCard";
 export * from "./components/CompletedTrainingHistoryClient";
 export * from "./components/TrainingDashboardClient";
 export * from "./utils/run-progress-storage";
+export * from "./data/training-story-templates";
+export * from "./utils/create-training-story-from-template";
+export * from "./components/TrainingStoryTemplatesClient";

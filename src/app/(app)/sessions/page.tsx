@@ -1,4 +1,4 @@
-import { ClipboardCheck, Plus } from "lucide-react"; import Link from "next/link";
+import { ClipboardCheck, Plus, LayoutTemplate } from "lucide-react"; import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { TrainingStoriesClient } from "@/features/sessions";
@@ -25,12 +25,20 @@ export default function SessionsPage() {
             </Button>
           </Link>
 
+          <Link href="/sessions/templates">
+            <Button variant="secondary">
+              <LayoutTemplate className="h-4 w-4" />
+              Templates
+            </Button>
+          </Link>
           <Link href="/sessions/new">
             <Button>
               <Plus className="h-4 w-4" />
               New Training Story
             </Button>
           </Link>
+
+
         </div>
       </div>
 
