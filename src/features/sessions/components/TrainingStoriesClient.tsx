@@ -13,6 +13,13 @@ import type {
 
 type StatusFilter = TrainingStoryStatus | "all";
 
+type SortOption =
+  | "updated-desc"
+  | "created-desc"
+  | "title-asc"
+  | "duration-asc"
+  | "duration-desc";
+
 const statusOptions: StatusFilter[] = [
   "all",
   "draft",
@@ -22,19 +29,61 @@ const statusOptions: StatusFilter[] = [
   "archived",
 ];
 
+const sortOptions: { value: SortOption; label: string }[] = [
+  { value: "updated-desc", label: "Newest updated" },
+  { value: "created-desc", label: "Newest created" },
+  { value: "title-asc", label: "Title A-Z" },
+  { value: "duration-asc", label: "Shortest duration" },
+  { value: "duration-desc", label: "Longest duration" },
+];
+
 function getInitialTrainingStories(): TrainingStory[] {
   return getAllTrainingStories(trainingStories);
+}
+
+function sortTrainingStories(
+  stories: TrainingStory[],
+  sortOption: SortOption
+): TrainingStory[] {
+  return [...stories].sort((a, b) => {
+    if (sortOption === "updated-desc") {
+      return (
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+    }
+
+    if (sortOption === "created-desc") {
+      return (
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    }
+
+    if (sortOption === "title-asc") {
+      return a.title.localeCompare(b.title);
+    }
+
+    if (sortOption === "duration-asc") {
+      return a.durationMinutes - b.durationMinutes;
+    }
+
+    if (sortOption === "duration-desc") {
+      return b.durationMinutes - a.durationMinutes;
+    }
+
+    return 0;
+  });
 }
 
 export function TrainingStoriesClient() {
   const [stories] = useState<TrainingStory[]>(getInitialTrainingStories);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortOption, setSortOption] = useState<SortOption>("updated-desc");
 
   const filteredStories = useMemo(() => {
     const normalizedSearchText = searchText.trim().toLowerCase();
 
-    return stories.filter((story) => {
+    const matchingStories = stories.filter((story) => {
       const matchesStatus =
         statusFilter === "all" || story.status === statusFilter;
 
@@ -54,11 +103,13 @@ export function TrainingStoriesClient() {
 
       return matchesStatus && matchesSearch;
     });
-  }, [searchText, statusFilter, stories]);
+
+    return sortTrainingStories(matchingStories, sortOption);
+  }, [searchText, statusFilter, sortOption, stories]);
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 rounded-xl border p-4 md:grid-cols-[1fr_220px]">
+      <div className="grid gap-4 rounded-xl border p-4 md:grid-cols-[1fr_220px_220px]">
         <div className="space-y-2">
           <label htmlFor="training-story-search" className="text-sm font-medium">
             Search
@@ -89,6 +140,27 @@ export function TrainingStoriesClient() {
             {statusOptions.map((status) => (
               <option key={status} value={status}>
                 {status}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="training-story-sort" className="text-sm font-medium">
+            Sort
+          </label>
+
+          <select
+            id="training-story-sort"
+            value={sortOption}
+            onChange={(event) =>
+              setSortOption(event.target.value as SortOption)
+            }
+            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
