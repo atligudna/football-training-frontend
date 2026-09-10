@@ -65,6 +65,25 @@ function formatSeconds(totalSeconds: number) {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
+function getTotalRunSeconds(runActivities: RunActivityItem[]) {
+    return runActivities.reduce(
+        (total, item) => total + item.activity.durationMinutes * 60,
+        0
+    );
+}
+
+function getCompletedRunSecondsBeforeActivity(
+    runActivities: RunActivityItem[],
+    activityIndex: number
+) {
+    return runActivities
+        .slice(0, activityIndex)
+        .reduce(
+            (total, item) => total + item.activity.durationMinutes * 60,
+            0
+        );
+}
+
 export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
     const router = useRouter();
     const [story] = useState(() => getTrainingStoryById(id, trainingStories));
@@ -83,11 +102,11 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         return progress?.secondsRemaining ?? getInitialSeconds(story);
     });
     const [isTimerRunning, setIsTimerRunning] = useState(false);
-
     const runActivities = useMemo(() => {
         if (!story) return [];
         return getRunActivities(story);
     }, [story]);
+
     useEffect(() => {
         if (!story) return;
 
@@ -148,7 +167,6 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
 
     const isFirstActivity = currentActivityIndex === 0;
     const isLastActivity = currentActivityIndex === runActivities.length - 1;
-
     const progressPercent =
         runActivities.length > 0
             ? ((currentActivityIndex + 1) / runActivities.length) * 100
@@ -162,6 +180,39 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         totalActivitySeconds > 0
             ? ((totalActivitySeconds - secondsRemaining) / totalActivitySeconds) * 100
             : 0;
+
+    const totalRunSeconds = getTotalRunSeconds(runActivities);
+
+    const completedRunSecondsBeforeCurrent =
+        getCompletedRunSecondsBeforeActivity(
+            runActivities,
+            currentActivityIndex
+        );
+
+    const elapsedCurrentActivitySeconds = currentActivity
+        ? Math.max(totalActivitySeconds - secondsRemaining, 0)
+        : 0;
+
+    const elapsedRunSeconds = Math.min(
+        completedRunSecondsBeforeCurrent + elapsedCurrentActivitySeconds,
+        totalRunSeconds
+    );
+
+    const remainingRunSeconds = Math.max(
+        totalRunSeconds - elapsedRunSeconds,
+        0
+    );
+
+    const overallRunProgressPercent =
+        totalRunSeconds > 0
+            ? (elapsedRunSeconds / totalRunSeconds) * 100
+            : 0;
+
+    const reviewStatus = story.review
+        ? `Reviewed · ${story.review.overallRating}/5`
+        : story.status === "completed"
+            ? "Completed · No review yet"
+            : "Not reviewed yet";
 
     function getSecondsForActivity(index: number) {
         const activity = runActivities[index];
@@ -292,6 +343,72 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
                 </div>
             ) : (
                 <div className="space-y-6">
+                    <section className="rounded-xl border p-5">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">
+                                    Run summary
+                                </p>
+
+                                <h2 className="mt-1 text-xl font-semibold">
+                                    Overall progress
+                                </h2>
+                            </div>
+
+                            <p className="rounded-full border px-3 py-1 text-sm font-medium">
+                                {Math.round(overallRunProgressPercent)}%
+                            </p>
+                        </div>
+
+                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+                            <div
+                                className="h-full bg-foreground"
+                                style={{ width: `${overallRunProgressPercent}%` }}
+                            />
+                        </div>
+
+                        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                            <div className="rounded-lg bg-muted p-3">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    Total time
+                                </p>
+                                <p className="mt-1 text-lg font-semibold">
+                                    {formatSeconds(totalRunSeconds)}
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg bg-muted p-3">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    Activities done
+                                </p>
+                                <p className="mt-1 text-lg font-semibold">
+                                    {currentActivityIndex} / {runActivities.length}
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg bg-muted p-3">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    Elapsed
+                                </p>
+                                <p className="mt-1 text-lg font-semibold">
+                                    {formatSeconds(elapsedRunSeconds)}
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg bg-muted p-3">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    Remaining
+                                </p>
+                                <p className="mt-1 text-lg font-semibold">
+                                    {formatSeconds(remainingRunSeconds)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <p className="mt-4 text-sm text-muted-foreground">
+                            Review status: {reviewStatus}
+                        </p>
+                    </section>
                     <section className="rounded-xl border p-5">
                         <div className="flex items-center justify-between gap-4">
                             <p className="text-sm font-medium text-muted-foreground">
