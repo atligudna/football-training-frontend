@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
     ArrowLeft,
+    CheckCircle2,
     ChevronLeft,
     ChevronRight,
     Pause,
@@ -12,9 +13,9 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-
+import { useRouter } from "next/navigation";
 import { trainingStories } from "../data/training-stories";
-import { getTrainingStoryById } from "../utils/training-story-storage";
+import { getTrainingStoryById, updateTrainingStory } from "../utils/training-story-storage";
 
 import type { Activity, TrainingStory } from "../types/training-story";
 
@@ -50,6 +51,7 @@ function formatSeconds(totalSeconds: number) {
 }
 
 export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
+    const router = useRouter();
     const [story] = useState(() => getTrainingStoryById(id, trainingStories));
     const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
     const [secondsRemaining, setSecondsRemaining] = useState(() => {
@@ -152,6 +154,19 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
 
         setSecondsRemaining(currentActivity.activity.durationMinutes * 60);
         setIsTimerRunning(false);
+    }
+
+    function handleFinishTraining() {
+        if (!story) return;
+
+        const completedStory = {
+            ...story,
+            status: "completed" as const,
+            updatedAt: new Date().toISOString(),
+        };
+
+        updateTrainingStory(completedStory);
+        router.push(`/sessions/${story.id}`);
     }
 
     return (
@@ -335,14 +350,17 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
                             Previous
                         </Button>
 
-                        <Button
-                            type="button"
-                            onClick={handleNextActivity}
-                            disabled={isLastActivity}
-                        >
-                            Next
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
+                        {isLastActivity ? (
+                            <Button type="button" onClick={handleFinishTraining}>
+                                <CheckCircle2 className="h-4 w-4" />
+                                Finish Training
+                            </Button>
+                        ) : (
+                            <Button type="button" onClick={handleNextActivity}>
+                                Next
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
                 </div>
             )}
