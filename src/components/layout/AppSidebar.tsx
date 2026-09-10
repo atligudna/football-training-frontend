@@ -10,8 +10,7 @@ export default function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r bg-background">
-      {/* Logo */}
+    <aside className="hidden h-full shrink-0 flex-col border-r bg-background lg:flex lg:w-[clamp(220px,18vw,280px)]">  {/* Logo */}
       <div className="border-b p-6">
         <h1 className="text-xl font-bold">
           ⚽ Football Planner

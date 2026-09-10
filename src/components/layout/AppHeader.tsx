@@ -5,6 +5,7 @@ import { Bell, CalendarDays } from "lucide-react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { formatLongDate } from "@/lib/date";
+import { MobileAppMenu } from "./MobileAppMenu";
 
 const today = formatLongDate(new Date());
 
@@ -30,12 +31,18 @@ export default function AppHeader() {
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-background px-6">
-      <div>
-        <h1 className="text-2xl font-bold">{title}</h1>
+      <div className="flex min-w-0 items-center gap-3">
+        <MobileAppMenu />
 
-        <p className="text-sm text-muted-foreground">
-          {today}
-        </p>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold sm:text-2xl">
+            {title}
+          </h1>
+
+          <p className="truncate text-sm text-muted-foreground">
+            {today}
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-6">

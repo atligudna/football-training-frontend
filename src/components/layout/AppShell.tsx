@@ -15,7 +15,7 @@ export default function AppShell({ children }: Props) {
       <div className="flex flex-1 flex-col overflow-hidden">
         <AppHeader />
 
-        <main className="flex-1 overflow-auto p-6">
+        <main className="min-w-0 flex-1 overflow-x-hidden p-4 lg:p-8">
           {children}
         </main>
       </div>
