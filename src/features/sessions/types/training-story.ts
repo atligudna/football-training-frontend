@@ -74,6 +74,14 @@ export interface Pitch {
   activityBlocks: ActivityBlock[];
 }
 
+export interface TrainingReview {
+  completedAt: string;
+  overallRating: number;
+  wentWell: string;
+  improveNextTime: string;
+  notes: string;
+}
+
 export interface TrainingStory {
   id: string;
   title: string;
@@ -84,6 +92,7 @@ export interface TrainingStory {
   objectives: string[];
   status: TrainingStoryStatus;
   pitches: Pitch[];
+  review?: TrainingReview;
   createdAt: string;
   updatedAt: string;
 }

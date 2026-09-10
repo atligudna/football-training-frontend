@@ -166,7 +166,7 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         };
 
         updateTrainingStory(completedStory);
-        router.push(`/sessions/${story.id}`);
+        router.push(`/sessions/${story.id}/review`);
     }
 
     return (
