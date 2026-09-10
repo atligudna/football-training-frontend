@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-
+import { TrainingReviewCard } from "./TrainingReviewCard";
 import { Button } from "@/components/ui/button";
 import { duplicateTrainingStory } from "../utils/duplicate-training-story";
 import { trainingStories } from "../data/training-stories";
@@ -397,7 +397,7 @@ export function TrainingStoryDetailClient({
                     </Button>
                 </div>
             )}
-
+            <TrainingReviewCard story={story} />
             <ObjectivesCard story={story} />
 
             <PitchSection
