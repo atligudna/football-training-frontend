@@ -23,3 +23,4 @@ export * from "./components/ObjectivesCard";
 export * from "./components/PitchSection";
 export * from "./utils/equipment-parser";
 export * from "./utils/duplicate-training-story";
+export * from "./components/RunTrainingStoryClient";

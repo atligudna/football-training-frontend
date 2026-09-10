@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Copy, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, Pencil, Play, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -49,6 +49,12 @@ export function TrainingStoryHeader({
         </div>
 
         <div className="flex items-center gap-2">
+          <Link href={`/sessions/${story.id}/run`}>
+            <Button type="button" variant="default">
+              <Play className="h-4 w-4" />
+              Run
+            </Button>
+          </Link>
           <Button type="button" variant="secondary" onClick={onEdit}>
             <Pencil className="h-4 w-4" />
             Edit Story
