@@ -163,10 +163,14 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
             ? ((totalActivitySeconds - secondsRemaining) / totalActivitySeconds) * 100
             : 0;
 
+    function getSecondsForActivity(index: number) {
+        const activity = runActivities[index];
+
+        return activity ? activity.activity.durationMinutes * 60 : 0;
+    }
 
     function resetTimerForActivity(index: number) {
-        const activity = runActivities[index];
-        const nextSeconds = activity ? activity.activity.durationMinutes * 60 : 0;
+        const nextSeconds = getSecondsForActivity(index);
 
         setSecondsRemaining(nextSeconds);
         setIsTimerRunning(false);
@@ -178,6 +182,7 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
             });
         }
     }
+
     function handlePreviousActivity() {
         const nextIndex = Math.max(currentActivityIndex - 1, 0);
 
@@ -207,6 +212,21 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
             currentActivityIndex,
             secondsRemaining: nextSeconds,
         });
+    }
+
+    function handleRestartTraining() {
+        const nextSeconds = getSecondsForActivity(0);
+
+        setCurrentActivityIndex(0);
+        setSecondsRemaining(nextSeconds);
+        setIsTimerRunning(false);
+
+        if (story) {
+            saveRunProgress(story.id, {
+                currentActivityIndex: 0,
+                secondsRemaining: nextSeconds,
+            });
+        }
     }
 
     function handleFinishTraining() {
@@ -254,6 +274,12 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
                         <span className="font-medium text-foreground">Activities:</span>{" "}
                         {runActivities.length}
                     </p>
+                </div>
+                <div className="mt-5">
+                    <Button type="button" variant="secondary" onClick={handleRestartTraining}>
+                        <RotateCcw className="h-4 w-4" />
+                        Restart training
+                    </Button>
                 </div>
             </header>
 
