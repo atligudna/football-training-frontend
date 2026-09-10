@@ -1,3 +1,5 @@
-export default function EquipmentPage() {
-  return <h1>Drills</h1>;
+import { DrillBankClient } from "@/features/drills";
+
+export default function DrillsPage() {
+  return <DrillBankClient />;
 }
