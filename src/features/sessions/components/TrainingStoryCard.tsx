@@ -4,6 +4,7 @@ import {
   Clock,
   Layers,
   Play,
+  Star,
   Target,
 } from "lucide-react";
 
@@ -17,6 +18,12 @@ interface TrainingStoryCardProps {
 
 const actionLinkBase =
   "inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium transition-colors";
+
+function formatCompletedAt(dateString: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+  }).format(new Date(dateString));
+}
 
 export function TrainingStoryCard({ story }: TrainingStoryCardProps) {
   const pitchCount = story.pitches.length;
@@ -64,6 +71,36 @@ export function TrainingStoryCard({ story }: TrainingStoryCardProps) {
             {blockCount} {blockCount === 1 ? "block" : "blocks"}
           </span>
         </div>
+      </div>
+
+      <div className="mt-5 border-t pt-4">
+        <p className="mb-2 text-sm font-medium">Review</p>
+
+        {story.review ? (
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Star
+                    key={index}
+                    className={`h-4 w-4 ${index < story.review!.overallRating
+                        ? "fill-current"
+                        : "text-muted-foreground"
+                      }`}
+                  />
+                ))}
+              </div>
+
+              <span>{story.review.overallRating}/5</span>
+            </div>
+
+            <p>
+              Completed: {formatCompletedAt(story.review.completedAt)}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No review yet</p>
+        )}
       </div>
 
       {story.objectives.length > 0 && (
