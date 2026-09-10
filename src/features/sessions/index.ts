@@ -26,3 +26,4 @@ export * from "./utils/duplicate-training-story";
 export * from "./components/RunTrainingStoryClient";
 export * from "./components/TrainingStoryReviewClient";
 export * from "./components/TrainingReviewCard";
+export * from "./components/CompletedTrainingHistoryClient";
