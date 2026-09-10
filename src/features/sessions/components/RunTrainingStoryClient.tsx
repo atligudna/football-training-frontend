@@ -15,7 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { trainingStories } from "../data/training-stories";
-import { getTrainingStoryById, updateTrainingStory } from "../utils/training-story-storage";
+import {
+    getTrainingStoryById,
+    updateTrainingStory
+} from "../utils/training-story-storage";
 
 import type { Activity, TrainingStory } from "../types/training-story";
 
@@ -66,6 +69,19 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
     const runActivities = useMemo(() => {
         if (!story) return [];
         return getRunActivities(story);
+    }, [story]);
+    useEffect(() => {
+        if (!story) return;
+
+        if (story.status === "completed" || story.status === "archived") {
+            return;
+        }
+
+        updateTrainingStory({
+            ...story,
+            status: "active",
+            updatedAt: new Date().toISOString(),
+        });
     }, [story]);
 
     const currentActivity = runActivities[currentActivityIndex];
