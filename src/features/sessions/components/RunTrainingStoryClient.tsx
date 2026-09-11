@@ -295,7 +295,7 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
     }
 
     return (
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="mx-auto max-w-3xl space-y-6 pb-28 sm:pb-6">
             <Link href={`/sessions/${story.id}`}>
                 <Button variant="ghost">
                     <ArrowLeft className="h-4 w-4" />
@@ -303,12 +303,12 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
                 </Button>
             </Link>
 
-            <header className="rounded-xl border p-6">
+            <header className="rounded-xl border p-4 sm:p-6">
                 <p className="text-sm font-medium text-muted-foreground">
                     Run Training
                 </p>
 
-                <h1 className="mt-1 text-3xl font-bold tracking-tight">
+                <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
                     {story.title}
                 </h1>
 
@@ -428,12 +428,12 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
                         </div>
                     </section>
 
-                    <section className="rounded-xl border p-6 text-center">
+                    <section className="rounded-xl border p-5 text-center sm:p-6">
                         <p className="text-sm font-medium text-muted-foreground">
                             Activity timer
                         </p>
 
-                        <p className="mt-2 text-6xl font-bold tracking-tight">
+                        <p className="mt-2 text-7xl font-bold tracking-tight sm:text-6xl">
                             {formatSeconds(secondsRemaining)}
                         </p>
 
@@ -475,13 +475,13 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
                         </div>
                     </section>
 
-                    <article className="rounded-xl border p-6">
+                    <article className="rounded-xl border p-4 sm:p-6">
                         <p className="text-sm font-medium text-muted-foreground">
                             {currentActivity.pitchName} · {currentActivity.blockTitle} ·{" "}
                             {currentActivity.blockType}
                         </p>
 
-                        <h2 className="mt-2 text-3xl font-bold tracking-tight">
+                        <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
                             {currentActivity.activity.title}
                         </h2>
 
@@ -535,29 +535,39 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
                             </div>
                         )}
                     </article>
-
-                    <div className="flex items-center justify-between gap-3">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={handlePreviousActivity}
-                            disabled={isFirstActivity}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            Previous
-                        </Button>
-
-                        {isLastActivity ? (
-                            <Button type="button" onClick={handleFinishTraining}>
-                                <CheckCircle2 className="h-4 w-4" />
-                                Finish Training
+                    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-4 backdrop-blur sm:sticky sm:inset-auto sm:rounded-xl sm:border">
+                        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={handlePreviousActivity}
+                                disabled={isFirstActivity}
+                                className="flex-1 sm:flex-none"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                                Previous
                             </Button>
-                        ) : (
-                            <Button type="button" onClick={handleNextActivity}>
-                                Next
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        )}
+
+                            {isLastActivity ? (
+                                <Button
+                                    type="button"
+                                    onClick={handleFinishTraining}
+                                    className="flex-1 sm:flex-none"
+                                >
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    Finish
+                                </Button>
+                            ) : (
+                                <Button
+                                    type="button"
+                                    onClick={handleNextActivity}
+                                    className="flex-1 sm:flex-none"
+                                >
+                                    Next
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
