@@ -4,6 +4,10 @@ import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  formatTagsForInput,
+  parseTagsText,
+} from "../utils/tags-parser";
 
 import type { TrainingStory } from "../types/training-story";
 
@@ -32,6 +36,9 @@ export function EditTrainingStoryForm({
   const [objectivesText, setObjectivesText] = useState(
     objectivesToText(story.objectives)
   );
+  const [tagsText, setTagsText] = useState(
+    formatTagsForInput(story.tags)
+  );
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,6 +50,7 @@ export function EditTrainingStoryForm({
       ageGroup,
       durationMinutes: Number(durationMinutes),
       theme: theme.trim() || undefined,
+      tags: parseTagsText(tagsText),
       objectives: objectivesText
         .split("\n")
         .map((objective) => objective.trim())
@@ -125,6 +133,24 @@ export function EditTrainingStoryForm({
             onChange={(event) => setTheme(event.target.value)}
             placeholder="Passing"
           />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="edit-training-story-tags" className="text-sm font-medium">
+            Tags
+          </label>
+
+          <input
+            id="edit-training-story-tags"
+            value={tagsText}
+            onChange={(event) => setTagsText(event.target.value)}
+            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+            placeholder="passing, finishing, 1v1"
+          />
+
+          <p className="text-xs text-muted-foreground">
+            Separate tags with commas.
+          </p>
         </div>
       </div>
 

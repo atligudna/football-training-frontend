@@ -46,6 +46,19 @@ export function TrainingStoryHeader({
               Theme: {story.theme}
             </p>
           )}
+
+          {story.tags && story.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {story.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-muted px-3 py-1 text-xs font-medium"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

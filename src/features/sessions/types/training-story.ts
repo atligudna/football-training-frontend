@@ -89,6 +89,7 @@ export interface TrainingStory {
   ageGroup: string;
   durationMinutes: number;
   theme?: string;
+  tags?: string[];
   objectives: string[];
   status: TrainingStoryStatus;
   pitches: Pitch[];

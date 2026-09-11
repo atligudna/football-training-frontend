@@ -88,6 +88,19 @@ export function TrainingStoryCard({ story }: TrainingStoryCardProps) {
       <div className="mt-5 border-t pt-4">
         <p className="mb-2 text-sm font-medium">Review</p>
 
+        {story.tags && story.tags.length > 0 && (
+          <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
+            {story.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-muted px-3 py-1 text-xs font-medium"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
         {story.review ? (
           <div className="space-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">

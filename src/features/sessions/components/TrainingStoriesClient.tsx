@@ -93,6 +93,7 @@ export function TrainingStoriesClient() {
         story.ageGroup,
         story.theme ?? "",
         story.status,
+        story.tags?.join(" ") ?? "",
       ]
         .join(" ")
         .toLowerCase();

@@ -32,3 +32,4 @@ export * from "./utils/run-progress-storage";
 export * from "./data/training-story-templates";
 export * from "./utils/create-training-story-from-template";
 export * from "./components/TrainingStoryTemplatesClient";
+export * from "./utils/tags-parser";

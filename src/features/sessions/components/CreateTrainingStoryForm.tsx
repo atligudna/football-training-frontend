@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { saveTrainingStory } from "../utils/training-story-storage";
-
+import { parseTagsText } from "../utils/tags-parser";
 import type { TrainingStory } from "../types/training-story";
 
 export function CreateTrainingStoryForm() {
@@ -19,6 +19,7 @@ export function CreateTrainingStoryForm() {
   const [durationMinutes, setDurationMinutes] = useState("90");
   const [theme, setTheme] = useState("");
   const [objectivesText, setObjectivesText] = useState("");
+  const [tagsText, setTagsText] = useState("");
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,6 +36,7 @@ export function CreateTrainingStoryForm() {
       ageGroup,
       durationMinutes: Number(durationMinutes),
       theme,
+      tags: parseTagsText(tagsText),
       objectives,
       status: "draft",
       pitches: [],
@@ -115,6 +117,23 @@ export function CreateTrainingStoryForm() {
             onChange={(event) => setTheme(event.target.value)}
             placeholder="Passing"
           />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="training-story-tags" className="text-sm font-medium">
+            Tags
+          </label>
+
+          <input
+            id="training-story-tags"
+            value={tagsText}
+            onChange={(event) => setTagsText(event.target.value)}
+            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+            placeholder="passing, finishing, 1v1"
+          />
+
+          <p className="text-xs text-muted-foreground">
+            Separate tags with commas.
+          </p>
         </div>
       </div>
 
