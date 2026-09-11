@@ -78,7 +78,14 @@ export function TrainingStoriesClient() {
   const [stories] = useState<TrainingStory[]>(getInitialTrainingStories);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [tagFilter, setTagFilter] = useState("all");
   const [sortOption, setSortOption] = useState<SortOption>("updated-desc");
+
+  const availableTags = useMemo(() => {
+    const tags = stories.flatMap((story) => story.tags ?? []);
+
+    return Array.from(new Set(tags)).sort((a, b) => a.localeCompare(b));
+  }, [stories]);
 
   const filteredStories = useMemo(() => {
     const normalizedSearchText = searchText.trim().toLowerCase();
@@ -86,6 +93,9 @@ export function TrainingStoriesClient() {
     const matchingStories = stories.filter((story) => {
       const matchesStatus =
         statusFilter === "all" || story.status === statusFilter;
+
+      const matchesTag =
+        tagFilter === "all" || Boolean(story.tags?.includes(tagFilter));
 
       const searchableText = [
         story.title,
@@ -102,15 +112,26 @@ export function TrainingStoriesClient() {
         normalizedSearchText.length === 0 ||
         searchableText.includes(normalizedSearchText);
 
-      return matchesStatus && matchesSearch;
+      return matchesStatus && matchesTag && matchesSearch;
     });
 
     return sortTrainingStories(matchingStories, sortOption);
-  }, [searchText, statusFilter, sortOption, stories]);
+  }, [searchText, statusFilter, tagFilter, sortOption, stories]);
+
+  function clearFilters() {
+    setSearchText("");
+    setStatusFilter("all");
+    setTagFilter("all");
+  }
+
+  const hasActiveFilters =
+    searchText.trim().length > 0 ||
+    statusFilter !== "all" ||
+    tagFilter !== "all";
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 rounded-xl border p-4 md:grid-cols-[1fr_220px_220px]">
+      <div className="grid gap-4 rounded-xl border p-4 lg:grid-cols-[1fr_180px_180px_220px]">
         <div className="space-y-2">
           <label htmlFor="training-story-search" className="text-sm font-medium">
             Search
@@ -120,7 +141,7 @@ export function TrainingStoriesClient() {
             id="training-story-search"
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
-            placeholder="Search title, theme, age group..."
+            placeholder="Search title, theme, tag, age group..."
             className="h-10 w-full rounded-md border bg-background px-3 text-sm"
           />
         </div>
@@ -141,6 +162,30 @@ export function TrainingStoriesClient() {
             {statusOptions.map((status) => (
               <option key={status} value={status}>
                 {status}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="training-story-tag" className="text-sm font-medium">
+            Tag
+          </label>
+
+          <select
+            id="training-story-tag"
+            value={tagFilter}
+            onChange={(event) => setTagFilter(event.target.value)}
+            disabled={availableTags.length === 0}
+            className="h-10 w-full rounded-md border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <option value="all">
+              {availableTags.length === 0 ? "No tags yet" : "All tags"}
+            </option>
+
+            {availableTags.map((tag) => (
+              <option key={tag} value={tag}>
+                {tag}
               </option>
             ))}
           </select>
@@ -173,13 +218,10 @@ export function TrainingStoriesClient() {
           Showing {filteredStories.length} of {stories.length} training stories.
         </p>
 
-        {(searchText || statusFilter !== "all") && (
+        {hasActiveFilters && (
           <button
             type="button"
-            onClick={() => {
-              setSearchText("");
-              setStatusFilter("all");
-            }}
+            onClick={clearFilters}
             className="text-sm font-medium underline-offset-4 hover:underline"
           >
             Clear filters
@@ -191,7 +233,7 @@ export function TrainingStoriesClient() {
         <div className="rounded-xl border border-dashed p-10 text-center">
           <h2 className="text-xl font-semibold">No training stories found</h2>
           <p className="mt-2 text-muted-foreground">
-            Try changing your search text or status filter.
+            Try changing your search text, status filter or tag filter.
           </p>
         </div>
       ) : (
