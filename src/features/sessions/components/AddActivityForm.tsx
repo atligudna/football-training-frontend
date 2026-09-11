@@ -3,7 +3,9 @@
 import { FormEvent, useState } from "react";
 import { parseEquipmentText } from "../utils/equipment-parser";
 import { Button } from "@/components/ui/button";
-
+import { drills as baseDrills } from "@/features/drills";
+import { getAllDrills } from "@/features/drills";
+import { formatEquipmentForTextarea } from "../utils/equipment-parser";
 import type { Activity, ActivityType } from "../types/training-story";
 
 const activityTypes: ActivityType[] = [
@@ -26,6 +28,28 @@ export function AddActivityForm({ onAddActivity }: AddActivityFormProps) {
     const [coachingPointsText, setCoachingPointsText] = useState("");
     const [playerFocusText, setPlayerFocusText] = useState("");
     const [equipmentText, setEquipmentText] = useState("");
+    const [availableDrills] = useState(() => getAllDrills(baseDrills));
+    const [selectedDrillId, setSelectedDrillId] = useState("");
+
+
+
+    function handleSelectDrill(drillId: string) {
+        setSelectedDrillId(drillId);
+
+        if (!drillId) return;
+
+        const selectedDrill = availableDrills.find((drill) => drill.id === drillId);
+
+        if (!selectedDrill) return;
+
+        setTitle(selectedDrill.title);
+        setType(selectedDrill.type);
+        setDescription(selectedDrill.description);
+        setDurationMinutes(String(selectedDrill.durationMinutes));
+        setCoachingPointsText(
+            selectedDrill.coachingPoints.map((point) => point.text).join("\n")
+        ); setEquipmentText(formatEquipmentForTextarea(selectedDrill.equipment));
+    }
 
     function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -86,6 +110,35 @@ export function AddActivityForm({ onAddActivity }: AddActivityFormProps) {
                         required
                         className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                     />
+                </div>
+
+                <div className="rounded-lg border bg-muted/40 p-4">
+                    <div className="space-y-2">
+                        <label htmlFor="activity-drill-template" className="text-sm font-medium">
+                            Start from drill bank
+                        </label>
+
+                        <select
+                            id="activity-drill-template"
+                            value={selectedDrillId}
+                            onChange={(event) => handleSelectDrill(event.target.value)}
+                            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                        >
+                            <option value="">Choose a drill...</option>
+
+                            {availableDrills.map((drill) => (
+                                <option key={drill.id} value={drill.id}>
+                                    {drill.title} · {drill.ageGroup ?? "No age group"} ·{" "}
+                                    {drill.durationMinutes} min
+                                </option>
+                            ))}
+                        </select>
+
+                        <p className="text-xs text-muted-foreground">
+                            Selecting a drill fills the activity form. You can still edit everything
+                            before saving.
+                        </p>
+                    </div>
                 </div>
 
                 <div className="space-y-2">
