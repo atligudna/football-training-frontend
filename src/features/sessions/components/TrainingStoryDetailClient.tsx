@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -18,6 +18,8 @@ import { TrainingStorySummaryCards } from "./TrainingStorySummaryCards";
 import { TrainingStoryHeader } from "./TrainingStoryHeader";
 import { ObjectivesCard } from "./ObjectivesCard";
 import { PitchSection } from "./PitchSection";
+import { authStorage } from "@/features/auth/utils/authStorage";
+import { trainingStoryService } from "../services/training-story.service";
 import type {
     Activity,
     ActivityBlock,
@@ -34,19 +36,83 @@ export function TrainingStoryDetailClient({
 }: TrainingStoryDetailClientProps) {
     const router = useRouter();
 
-    const [story, setStory] = useState(() =>
+    const [story, setStory] = useState<TrainingStory | undefined>(() =>
         getTrainingStoryById(id, trainingStories)
     );
+
+    const [isLoadingBackendStory, setIsLoadingBackendStory] = useState(() =>
+        Boolean(authStorage.getToken())
+    );
+
+    const [backendError, setBackendError] = useState<string | null>(null);
+    const [backendSaveError, setBackendSaveError] = useState<string | null>(null);
+    const [isSavingBackendStory, setIsSavingBackendStory] = useState(false);
     const [isEditingStory, setIsEditingStory] = useState(false);
     const [undoSnapshot, setUndoSnapshot] = useState<TrainingStory | null>(null);
     const [undoMessage, setUndoMessage] = useState("");
     const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    function saveStory(updatedStory: TrainingStory) {
-        updateTrainingStory(updatedStory);
-        setStory(updatedStory);
-    }
+    useEffect(() => {
+        let isActive = true;
 
+        const token = authStorage.getToken();
+
+        if (!token) {
+            return;
+        }
+
+        trainingStoryService
+            .getFullTrainingStory(id, token)
+            .then((backendStory) => {
+                if (!isActive) return;
+
+                setStory(backendStory);
+                setBackendError(null);
+            })
+            .catch(() => {
+                if (!isActive) return;
+
+                setBackendError(
+                    "Could not load this training story from backend. Showing local version if available."
+                );
+            })
+            .finally(() => {
+                if (!isActive) return;
+
+                setIsLoadingBackendStory(false);
+            });
+
+        return () => {
+            isActive = false;
+        };
+    }, [id]);
+
+    function saveStory(updatedStory: TrainingStory) {
+        setStory(updatedStory);
+        updateTrainingStory(updatedStory);
+
+        const token = authStorage.getToken();
+
+        if (!token) return;
+
+        setIsSavingBackendStory(true);
+        setBackendSaveError(null);
+
+        trainingStoryService
+            .updateFullTrainingStory(updatedStory.id, updatedStory, token)
+            .then((savedStory) => {
+                setStory(savedStory);
+                updateTrainingStory(savedStory);
+            })
+            .catch(() => {
+                setBackendSaveError(
+                    "Could not save this training story to backend. Local changes are still saved on this device."
+                );
+            })
+            .finally(() => {
+                setIsSavingBackendStory(false);
+            });
+    }
 
     function confirmDelete(message: string) {
         return window.confirm(message);
@@ -84,12 +150,12 @@ export function TrainingStoryDetailClient({
             undoTimerRef.current = null;
         }
     }
-    
+
     function handleSaveTrainingStory(updatedStory: TrainingStory) {
         saveStory(updatedStory);
         setIsEditingStory(false);
     }
-    
+
     function handleDuplicateTrainingStory() {
         if (!story) return;
 
@@ -350,6 +416,16 @@ export function TrainingStoryDetailClient({
         );
     }
 
+    if (!story && isLoadingBackendStory) {
+        return (
+            <div className="rounded-xl border p-6">
+                <h1 className="text-2xl font-bold">Loading training story...</h1>
+                <p className="mt-2 text-muted-foreground">
+                    Fetching full training story from backend.
+                </p>
+            </div>
+        );
+    }
     if (!story) {
         return (
             <div className="space-y-6">
@@ -372,6 +448,24 @@ export function TrainingStoryDetailClient({
 
     return (
         <div className="space-y-8">
+            {backendError && (
+                <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+                    {backendError}
+                </div>
+            )}
+
+            {isSavingBackendStory && (
+                <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                    Saving training story to backend...
+                </div>
+            )}
+
+            {backendSaveError && (
+                <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+                    {backendSaveError}
+                </div>
+            )}
+
             {isEditingStory ? (
                 <EditTrainingStoryForm
                     story={story}
