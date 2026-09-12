@@ -1,6 +1,15 @@
-interface RunProgress {
+export interface RunNote {
+  id: string;
+  activityId: string;
+  activityTitle: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface RunProgress {
   currentActivityIndex: number;
   secondsRemaining: number;
+  notes: RunNote[];
 }
 
 function getRunProgressKey(storyId: string) {
@@ -15,18 +24,32 @@ export function getRunProgress(storyId: string): RunProgress | null {
   if (!raw) return null;
 
   try {
-    return JSON.parse(raw) as RunProgress;
+    const progress = JSON.parse(raw) as Partial<RunProgress>;
+
+    return {
+      currentActivityIndex: progress.currentActivityIndex ?? 0,
+      secondsRemaining: progress.secondsRemaining ?? 0,
+      notes: progress.notes ?? [],
+    };
   } catch {
     return null;
   }
 }
 
-export function saveRunProgress(storyId: string, progress: RunProgress) {
+export function saveRunProgress(
+  storyId: string,
+  progress: Partial<RunProgress>
+) {
   if (typeof window === "undefined") return;
+
+  const currentProgress = getRunProgress(storyId);
 
   window.localStorage.setItem(
     getRunProgressKey(storyId),
-    JSON.stringify(progress)
+    JSON.stringify({
+      ...currentProgress,
+      ...progress,
+    })
   );
 }
 

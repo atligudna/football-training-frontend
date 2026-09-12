@@ -10,9 +10,9 @@ import {
     Pause,
     Play,
     RotateCcw,
+    Trash2,
 } from "lucide-react";
 import {
-    clearRunProgress,
     getRunProgress,
     saveRunProgress,
 } from "../utils/run-progress-storage";
@@ -25,6 +25,7 @@ import {
 } from "../utils/training-story-storage";
 
 import type { Activity, TrainingStory } from "../types/training-story";
+import type { RunNote } from "../utils/run-progress-storage";
 
 interface RunTrainingStoryClientProps {
     id: string;
@@ -106,6 +107,12 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         if (!story) return [];
         return getRunActivities(story);
     }, [story]);
+    const [runNoteText, setRunNoteText] = useState("");
+    const [runNotes, setRunNotes] = useState<RunNote[]>(() => {
+        if (!story) return [];
+
+        return getRunProgress(story.id)?.notes ?? [];
+    });
 
     useEffect(() => {
         if (!story) return;
@@ -234,6 +241,50 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         }
     }
 
+    function handleAddRunNote(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        if (!story || !currentActivity) return;
+
+        const trimmedText = runNoteText.trim();
+
+        if (!trimmedText) return;
+
+        const note: RunNote = {
+            id: crypto.randomUUID(),
+            activityId: currentActivity.activity.id,
+            activityTitle: currentActivity.activity.title,
+            text: trimmedText,
+            createdAt: new Date().toISOString(),
+        };
+
+        const nextNotes = [note, ...runNotes];
+
+        setRunNotes(nextNotes);
+        setRunNoteText("");
+
+        saveRunProgress(story.id, {
+            currentActivityIndex,
+            secondsRemaining,
+            notes: nextNotes,
+        });
+    }
+
+    function handleDeleteRunNote(noteId: string) {
+        if (!story) return;
+
+        const nextNotes = runNotes.filter((note) => note.id !== noteId);
+
+        setRunNotes(nextNotes);
+
+        saveRunProgress(story.id, {
+            currentActivityIndex,
+            secondsRemaining,
+            notes: nextNotes,
+        });
+    }
+
+
     function handlePreviousActivity() {
         const nextIndex = Math.max(currentActivityIndex - 1, 0);
 
@@ -271,11 +322,14 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         setCurrentActivityIndex(0);
         setSecondsRemaining(nextSeconds);
         setIsTimerRunning(false);
+        setRunNotes([]);
+        setRunNoteText("");
 
         if (story) {
             saveRunProgress(story.id, {
                 currentActivityIndex: 0,
                 secondsRemaining: nextSeconds,
+                notes: [],
             });
         }
     }
@@ -290,9 +344,15 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         };
 
         updateTrainingStory(completedStory);
-        clearRunProgress(story.id);
         router.push(`/sessions/${story.id}/review`);
     }
+
+    saveRunProgress(story.id, {
+        currentActivityIndex,
+        secondsRemaining,
+        notes: runNotes,
+    });
+
 
     return (
         <div className="mx-auto max-w-3xl space-y-6 pb-28 sm:pb-6">
@@ -302,6 +362,55 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
                     Back to plan
                 </Button>
             </Link>
+
+            <section className="rounded-xl border p-4 sm:p-6">
+                <h2 className="text-xl font-semibold">Run notes</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    Add quick notes during the session. They will appear on the review page.
+                </p>
+
+                <form onSubmit={handleAddRunNote} className="mt-4 space-y-3">
+                    <textarea
+                        value={runNoteText}
+                        onChange={(event) => setRunNoteText(event.target.value)}
+                        rows={3}
+                        className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                        placeholder="Example: Too many players waiting. Make groups smaller next time."
+                    />
+
+                    <div className="flex justify-end">
+                        <Button type="submit" variant="secondary">
+                            Add note
+                        </Button>
+                    </div>
+                </form>
+
+                {runNotes.length > 0 && (
+                    <div className="mt-5 space-y-3 border-t pt-4">
+                        {runNotes.map((note) => (
+                            <div
+                                key={note.id}
+                                className="flex items-start justify-between gap-3 rounded-lg bg-muted p-3"
+                            >
+                                <div>
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                        {note.activityTitle}
+                                    </p>
+                                    <p className="mt-1 text-sm">{note.text}</p>
+                                </div>
+
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => handleDeleteRunNote(note.id)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
 
             <header className="rounded-xl border p-4 sm:p-6">
                 <p className="text-sm font-medium text-muted-foreground">
