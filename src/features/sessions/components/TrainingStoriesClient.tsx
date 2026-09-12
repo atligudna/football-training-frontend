@@ -1,8 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { authStorage } from "@/features/auth/utils/authStorage";
 
 import { trainingStories } from "../data/training-stories";
+import { trainingStoryService } from "../services/training-story.service";
 import { getAllTrainingStories } from "../utils/training-story-storage";
 import { TrainingStoryList } from "./TrainingStoryList";
 
@@ -41,6 +44,19 @@ function getInitialTrainingStories(): TrainingStory[] {
   return getAllTrainingStories(trainingStories);
 }
 
+function mergeBackendAndLocalStories(
+  backendStories: TrainingStory[],
+  localStories: TrainingStory[]
+): TrainingStory[] {
+  const backendIds = new Set(backendStories.map((story) => story.id));
+
+  const localOnlyStories = localStories.filter(
+    (story) => !backendIds.has(story.id)
+  );
+
+  return [...backendStories, ...localOnlyStories];
+}
+
 function sortTrainingStories(
   stories: TrainingStory[],
   sortOption: SortOption
@@ -75,15 +91,59 @@ function sortTrainingStories(
 }
 
 export function TrainingStoriesClient() {
-  const [stories] = useState<TrainingStory[]>(getInitialTrainingStories);
+  const [stories, setStories] = useState<TrainingStory[]>(
+    getInitialTrainingStories
+  );
+
+  const [isLoadingBackendStories, setIsLoadingBackendStories] = useState(() =>
+    Boolean(authStorage.getToken())
+  );
+
+  const [backendError, setBackendError] = useState<string | null>(null);
+
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [tagFilter, setTagFilter] = useState("all");
   const [sortOption, setSortOption] = useState<SortOption>("updated-desc");
 
+  useEffect(() => {
+    let isActive = true;
+
+    const token = authStorage.getToken();
+
+    if (!token) return;
+
+    trainingStoryService
+      .getTrainingStories(token)
+      .then((backendStories) => {
+        if (!isActive) return;
+
+        setStories((currentStories) =>
+          mergeBackendAndLocalStories(backendStories, currentStories)
+        );
+
+        setBackendError(null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+
+        setBackendError(
+          "Could not load training stories from backend. Showing local stories."
+        );
+      })
+      .finally(() => {
+        if (!isActive) return;
+
+        setIsLoadingBackendStories(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const availableTags = useMemo(() => {
     const tags = stories.flatMap((story) => story.tags ?? []);
-
     return Array.from(new Set(tags)).sort((a, b) => a.localeCompare(b));
   }, [stories]);
 
@@ -131,6 +191,18 @@ export function TrainingStoriesClient() {
 
   return (
     <div className="space-y-6">
+      {isLoadingBackendStories && (
+        <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          Loading training stories from backend...
+        </div>
+      )}
+
+      {backendError && (
+        <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+          {backendError}
+        </div>
+      )}
+
       <div className="grid gap-4 rounded-xl border p-4 lg:grid-cols-[1fr_180px_180px_220px]">
         <div className="space-y-2">
           <label htmlFor="training-story-search" className="text-sm font-medium">
