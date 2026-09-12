@@ -1,8 +1,8 @@
 import { ApiError } from "./errors/ApiError";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
-
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+  
 type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
