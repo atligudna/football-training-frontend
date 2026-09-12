@@ -1,11 +1,14 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { authStorage } from "@/features/auth/utils/authStorage";
 
+import { trainingStoryService } from "../services/training-story.service";
 import { saveTrainingStory } from "../utils/training-story-storage";
 import { parseTagsText } from "../utils/tags-parser";
 import type { TrainingStory } from "../types/training-story";
@@ -21,8 +24,20 @@ export function CreateTrainingStoryForm() {
   const [objectivesText, setObjectivesText] = useState("");
   const [tagsText, setTagsText] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const token = authStorage.getToken();
+
+    if (!token) {
+      setCreateError("You need to be logged in to create a backend training story.");
+      return;
+    }
+
+    const now = new Date().toISOString();
 
     const objectives = objectivesText
       .split("\n")
@@ -31,26 +46,48 @@ export function CreateTrainingStoryForm() {
 
     const story: TrainingStory = {
       id: crypto.randomUUID(),
-      title,
-      description,
-      ageGroup,
+      title: title.trim(),
+      description: description.trim(),
+      ageGroup: ageGroup.trim(),
       durationMinutes: Number(durationMinutes),
-      theme,
+      theme: theme.trim() || undefined,
       tags: parseTagsText(tagsText),
       objectives,
       status: "draft",
       pitches: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     };
 
-    saveTrainingStory(story);
+    setIsCreating(true);
+    setCreateError(null);
 
-    router.push("/sessions");
+    try {
+      const savedStory = await trainingStoryService.createFullTrainingStory(
+        story,
+        token
+      );
+
+      saveTrainingStory(savedStory);
+
+      router.push(`/sessions/${savedStory.id}`);
+    } catch {
+      setCreateError(
+        "Could not create this training story in backend. Check that backend is running and try again."
+      );
+    } finally {
+      setIsCreating(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
+      {createError && (
+        <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+          {createError}
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="title">
@@ -62,6 +99,7 @@ export function CreateTrainingStoryForm() {
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Monday Training"
             required
+            disabled={isCreating}
           />
         </div>
 
@@ -75,6 +113,7 @@ export function CreateTrainingStoryForm() {
             onChange={(event) => setAgeGroup(event.target.value)}
             placeholder="U11"
             required
+            disabled={isCreating}
           />
         </div>
       </div>
@@ -89,6 +128,7 @@ export function CreateTrainingStoryForm() {
           onChange={(event) => setDescription(event.target.value)}
           placeholder="Passing and possession"
           required
+          disabled={isCreating}
         />
       </div>
 
@@ -104,6 +144,7 @@ export function CreateTrainingStoryForm() {
             value={durationMinutes}
             onChange={(event) => setDurationMinutes(event.target.value)}
             required
+            disabled={isCreating}
           />
         </div>
 
@@ -116,9 +157,11 @@ export function CreateTrainingStoryForm() {
             value={theme}
             onChange={(event) => setTheme(event.target.value)}
             placeholder="Passing"
+            disabled={isCreating}
           />
         </div>
-        <div className="space-y-2">
+
+        <div className="space-y-2 md:col-span-2">
           <label htmlFor="training-story-tags" className="text-sm font-medium">
             Tags
           </label>
@@ -127,8 +170,9 @@ export function CreateTrainingStoryForm() {
             id="training-story-tags"
             value={tagsText}
             onChange={(event) => setTagsText(event.target.value)}
-            className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+            className="h-10 w-full rounded-md border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="passing, finishing, 1v1"
+            disabled={isCreating}
           />
 
           <p className="text-xs text-muted-foreground">
@@ -146,7 +190,8 @@ export function CreateTrainingStoryForm() {
           value={objectivesText}
           onChange={(event) => setObjectivesText(event.target.value)}
           placeholder={"Open your body\nPass to the far foot\nMove after passing"}
-          className="min-h-32 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-h-32 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isCreating}
         />
         <p className="text-xs text-muted-foreground">
           Put each objective on a new line.
@@ -154,12 +199,15 @@ export function CreateTrainingStoryForm() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button type="submit">Create Training Story</Button>
+        <Button type="submit" disabled={isCreating}>
+          {isCreating ? "Creating..." : "Create Training Story"}
+        </Button>
 
         <Button
           type="button"
           variant="secondary"
           onClick={() => router.push("/sessions")}
+          disabled={isCreating}
         >
           Cancel
         </Button>
