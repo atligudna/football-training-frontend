@@ -51,6 +51,10 @@ export function TrainingStoryDetailClient({
     const [undoSnapshot, setUndoSnapshot] = useState<TrainingStory | null>(null);
     const [undoMessage, setUndoMessage] = useState("");
     const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [isDeletingBackendStory, setIsDeletingBackendStory] = useState(false);
+    const [backendDeleteError, setBackendDeleteError] = useState<string | null>(
+        null
+    );
 
     useEffect(() => {
         let isActive = true;
@@ -167,17 +171,36 @@ export function TrainingStoryDetailClient({
         router.push(`/sessions/${duplicatedStory.id}`);
     }
 
-    function handleDeleteTrainingStory() {
-        if (!story) return;
+    async function handleDeleteTrainingStory() {
+        if (!story || isDeletingBackendStory) return;
 
-        const confirmed = window.confirm(
-            `Delete "${story.title}"? This cannot be undone.`
+        const storyToDelete = story;
+
+        const confirmed = confirmDelete(
+            `Delete "${storyToDelete.title}"? This cannot be undone.`
         );
 
         if (!confirmed) return;
 
-        deleteTrainingStory(story.id);
-        router.push("/sessions");
+        const token = authStorage.getToken();
+
+        setIsDeletingBackendStory(true);
+        setBackendDeleteError(null);
+
+        try {
+            if (token) {
+                await trainingStoryService.deleteTrainingStory(storyToDelete.id, token);
+            }
+
+            deleteTrainingStory(storyToDelete.id);
+            router.push("/sessions");
+        } catch {
+            setBackendDeleteError(
+                "Could not delete this training story from backend. It has not been deleted."
+            );
+        } finally {
+            setIsDeletingBackendStory(false);
+        }
     }
 
     function handleAddPitch(pitch: Pitch) {
@@ -463,6 +486,18 @@ export function TrainingStoryDetailClient({
             {backendSaveError && (
                 <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
                     {backendSaveError}
+                </div>
+            )}
+
+            {backendDeleteError && (
+                <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+                    {backendDeleteError}
+                </div>
+            )}
+
+            {isDeletingBackendStory && (
+                <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                    Deleting training story from backend...
                 </div>
             )}
 
