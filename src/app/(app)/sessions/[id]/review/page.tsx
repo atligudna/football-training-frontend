@@ -1,5 +1,4 @@
-import { TrainingStoryReviewClient } from "@/features/sessions";
-
+import { TrainingStoryReviewClient } from "@/features/sessions/components/TrainingStoryReviewClient";
 interface TrainingStoryReviewPageProps {
   params: Promise<{ id: string }>;
 }
