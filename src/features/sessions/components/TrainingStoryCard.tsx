@@ -15,6 +15,9 @@ import { Card } from "@/components/ui/card";
 import { duplicateTrainingStory } from "../utils/duplicate-training-story";
 import { saveTrainingStory } from "../utils/training-story-storage";
 import type { TrainingStory } from "../types/training-story";
+import { useState } from "react";
+import { authStorage } from "@/features/auth/utils/authStorage";
+import { trainingStoryService } from "../services/training-story.service";
 
 interface TrainingStoryCardProps {
   story: TrainingStory;
@@ -31,13 +34,30 @@ function formatCompletedAt(dateString: string) {
 
 export function TrainingStoryCard({ story }: TrainingStoryCardProps) {
   const router = useRouter();
+  const [isDuplicating, setIsDuplicating] = useState(false);
+  async function handleDuplicateStory() {
+    const token = authStorage.getToken();
 
-  function handleDuplicateStory() {
+    if (!token || isDuplicating) return;
+
     const duplicatedStory = duplicateTrainingStory(story);
 
-    saveTrainingStory(duplicatedStory);
-    router.push(`/sessions/${duplicatedStory.id}`);
+    setIsDuplicating(true);
+
+    try {
+      const savedStory = await trainingStoryService.createFullTrainingStory(
+        duplicatedStory,
+        token
+      );
+
+      saveTrainingStory(savedStory);
+      router.push(`/sessions/${savedStory.id}`);
+    } finally {
+      setIsDuplicating(false);
+    }
   }
+
+
   const pitchCount = story.pitches.length;
   const blockCount = story.pitches.reduce(
     (total, pitch) => total + pitch.activityBlocks.length,
@@ -151,10 +171,11 @@ export function TrainingStoryCard({ story }: TrainingStoryCardProps) {
         <button
           type="button"
           onClick={handleDuplicateStory}
+          disabled={isDuplicating}
           className={`${actionLinkBase} bg-secondary text-secondary-foreground hover:bg-secondary/80`}
         >
           <Copy className="h-4 w-4" />
-          Duplicate
+          {isDuplicating ? "Duplicating..." : "Duplicate"}
         </button>
         <Link
           href={`/sessions/${story.id}/run`}

@@ -1,26 +1,41 @@
 import type {
   Activity,
   ActivityBlock,
+  CoachingPoint,
+  EquipmentItem,
   Pitch,
+  PlayerFocus,
   TrainingStory,
 } from "../types/training-story";
+
+function duplicateCoachingPoint(point: CoachingPoint): CoachingPoint {
+  return {
+    ...point,
+    id: crypto.randomUUID(),
+  };
+}
+
+function duplicatePlayerFocus(focus: PlayerFocus): PlayerFocus {
+  return {
+    ...focus,
+    id: crypto.randomUUID(),
+  };
+}
+
+function duplicateEquipmentItem(item: EquipmentItem): EquipmentItem {
+  return {
+    ...item,
+    id: crypto.randomUUID(),
+  };
+}
 
 function duplicateActivity(activity: Activity): Activity {
   return {
     ...activity,
     id: crypto.randomUUID(),
-    coachingPoints: activity.coachingPoints.map((point) => ({
-      ...point,
-      id: crypto.randomUUID(),
-    })),
-    playerFocus: activity.playerFocus.map((focus) => ({
-      ...focus,
-      id: crypto.randomUUID(),
-    })),
-    equipment: activity.equipment.map((item) => ({
-      ...item,
-      id: crypto.randomUUID(),
-    })),
+    coachingPoints: activity.coachingPoints.map(duplicateCoachingPoint),
+    playerFocus: activity.playerFocus.map(duplicatePlayerFocus),
+    equipment: activity.equipment.map(duplicateEquipmentItem),
   };
 }
 
@@ -48,6 +63,7 @@ export function duplicateTrainingStory(story: TrainingStory): TrainingStory {
     id: crypto.randomUUID(),
     title: `${story.title} (Copy)`,
     status: "draft",
+    review: undefined,
     pitches: story.pitches.map(duplicatePitch),
     createdAt: now,
     updatedAt: now,

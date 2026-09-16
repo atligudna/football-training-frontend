@@ -11,6 +11,7 @@ import { trainingStories } from "../data/training-stories";
 import {
     deleteTrainingStory,
     getTrainingStoryById,
+    saveTrainingStory,
     updateTrainingStory,
 } from "../utils/training-story-storage";
 import { EditTrainingStoryForm } from "./EditTrainingStoryForm";
@@ -160,15 +161,36 @@ export function TrainingStoryDetailClient({
         setIsEditingStory(false);
     }
 
-    function handleDuplicateTrainingStory() {
+    async function handleDuplicateTrainingStory() {
         if (!story) return;
+
+        const token = authStorage.getToken();
+
+        if (!token) {
+            setBackendSaveError("You need to be logged in to duplicate to backend.");
+            return;
+        }
 
         const duplicatedStory = duplicateTrainingStory(story);
 
-        saveStory(duplicatedStory);
-        setIsEditingStory(false);
+        setIsSavingBackendStory(true);
+        setBackendSaveError(null);
 
-        router.push(`/sessions/${duplicatedStory.id}`);
+        try {
+            const savedStory = await trainingStoryService.createFullTrainingStory(
+                duplicatedStory,
+                token
+            );
+
+            saveTrainingStory(savedStory);
+            router.push(`/sessions/${savedStory.id}`);
+        } catch {
+            setBackendSaveError(
+                "Could not duplicate this training story to backend. No duplicate was created."
+            );
+        } finally {
+            setIsSavingBackendStory(false);
+        }
     }
 
     async function handleDeleteTrainingStory() {
