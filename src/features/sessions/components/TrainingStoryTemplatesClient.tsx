@@ -1,28 +1,61 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Clock, Layers, Plus, Target } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { authStorage } from "@/features/auth/utils/authStorage";
 
 import { trainingStoryTemplates } from "../data/training-story-templates";
+import { trainingStoryService } from "../services/training-story.service";
 import { createTrainingStoryFromTemplate } from "../utils/create-training-story-from-template";
 import { saveTrainingStory } from "../utils/training-story-storage";
 
 export function TrainingStoryTemplatesClient() {
   const router = useRouter();
 
-  function handleCreateFromTemplate(templateId: string) {
+  const [creatingTemplateId, setCreatingTemplateId] = useState<string | null>(
+    null
+  );
+  const [backendError, setBackendError] = useState<string | null>(null);
+
+  async function handleCreateFromTemplate(templateId: string) {
+    if (creatingTemplateId) return;
+
+    const token = authStorage.getToken();
+
+    if (!token) {
+      setBackendError("You need to be logged in to create from a template.");
+      return;
+    }
+
     const template = trainingStoryTemplates.find((item) => item.id === templateId);
 
     if (!template) return;
 
     const story = createTrainingStoryFromTemplate(template);
 
-    saveTrainingStory(story);
-    router.push(`/sessions/${story.id}`);
+    setCreatingTemplateId(templateId);
+    setBackendError(null);
+
+    try {
+      const savedStory = await trainingStoryService.createFullTrainingStory(
+        story,
+        token
+      );
+
+      saveTrainingStory(savedStory);
+      router.push(`/sessions/${savedStory.id}`);
+    } catch {
+      setBackendError(
+        "Could not create this template training story in backend. No training story was created."
+      );
+    } finally {
+      setCreatingTemplateId(null);
+    }
   }
 
   return (
@@ -45,6 +78,12 @@ export function TrainingStoryTemplatesClient() {
         </p>
       </header>
 
+      {backendError && (
+        <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+          {backendError}
+        </div>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-2">
         {trainingStoryTemplates.map((template) => {
           const pitchCount = template.pitches.length;
@@ -52,6 +91,7 @@ export function TrainingStoryTemplatesClient() {
             (total, pitch) => total + pitch.activityBlocks.length,
             0
           );
+          const isCreatingThisTemplate = creatingTemplateId === template.id;
 
           return (
             <Card key={template.id} className="p-6">
@@ -106,9 +146,12 @@ export function TrainingStoryTemplatesClient() {
                 <Button
                   type="button"
                   onClick={() => handleCreateFromTemplate(template.id)}
+                  disabled={creatingTemplateId !== null}
                 >
                   <Plus className="h-4 w-4" />
-                  Create from template
+                  {isCreatingThisTemplate
+                    ? "Creating..."
+                    : "Create from template"}
                 </Button>
               </div>
             </Card>
