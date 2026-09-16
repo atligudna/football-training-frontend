@@ -1,22 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+
+import { AuthProvider } from "@/features/auth/providers/AuthProvider";
 
 import "./globals.css";
-import { AppProviders } from "@/providers";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Football Planner",
-  description: "Training planning for football coaches",
+  description: "Plan football training sessions",
 };
 
 export default function RootLayout({
@@ -25,14 +15,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-screen bg-background antialiased">
-        <AppProviders>
-          {children}
-        </AppProviders>
+    <html lang="en">
+      <body>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
