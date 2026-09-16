@@ -40,21 +40,18 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: "duration-desc", label: "Longest duration" },
 ];
 
-function getInitialTrainingStories(): TrainingStory[] {
+function getFallbackTrainingStories(): TrainingStory[] {
   return getAllTrainingStories(trainingStories);
 }
 
-function mergeBackendAndLocalStories(
-  backendStories: TrainingStory[],
-  localStories: TrainingStory[]
-): TrainingStory[] {
-  const backendIds = new Set(backendStories.map((story) => story.id));
+function getInitialTrainingStories(): TrainingStory[] {
+  const token = authStorage.getToken();
 
-  const localOnlyStories = localStories.filter(
-    (story) => !backendIds.has(story.id)
-  );
+  if (token) {
+    return [];
+  }
 
-  return [...backendStories, ...localOnlyStories];
+  return getFallbackTrainingStories();
 }
 
 function sortTrainingStories(
@@ -63,15 +60,11 @@ function sortTrainingStories(
 ): TrainingStory[] {
   return [...stories].sort((a, b) => {
     if (sortOption === "updated-desc") {
-      return (
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      );
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     }
 
     if (sortOption === "created-desc") {
-      return (
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
 
     if (sortOption === "title-asc") {
@@ -115,20 +108,27 @@ export function TrainingStoriesClient() {
 
     trainingStoryService
       .getTrainingStories(token)
-      .then((backendStories) => {
+      .then((backendStories) =>
+        Promise.all(
+          backendStories.map((backendStory) =>
+            trainingStoryService
+              .getFullTrainingStory(backendStory.id, token)
+              .catch(() => backendStory)
+          )
+        )
+      )
+      .then((fullBackendStories) => {
         if (!isActive) return;
 
-        setStories((currentStories) =>
-          mergeBackendAndLocalStories(backendStories, currentStories)
-        );
-
+        setStories(fullBackendStories);
         setBackendError(null);
       })
       .catch(() => {
         if (!isActive) return;
 
+        setStories(getFallbackTrainingStories());
         setBackendError(
-          "Could not load training stories from backend. Showing local stories."
+          "Could not load training stories from backend. Showing local fallback stories."
         );
       })
       .finally(() => {
