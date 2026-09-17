@@ -1,19 +1,31 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ClipboardCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { authStorage } from "@/features/auth/utils/authStorage";
 
 import { trainingStories } from "../data/training-stories";
+import { trainingStoryService } from "../services/training-story.service";
 import { getAllTrainingStories } from "../utils/training-story-storage";
 import { TrainingStoryList } from "./TrainingStoryList";
 
 import type { TrainingStory } from "../types/training-story";
 
-function getInitialTrainingStories(): TrainingStory[] {
+function getFallbackTrainingStories(): TrainingStory[] {
   return getAllTrainingStories(trainingStories);
+}
+
+function getInitialTrainingStories(): TrainingStory[] {
+  const token = authStorage.getToken();
+
+  if (token) {
+    return [];
+  }
+
+  return getFallbackTrainingStories();
 }
 
 function getCompletedDate(story: TrainingStory) {
@@ -21,7 +33,57 @@ function getCompletedDate(story: TrainingStory) {
 }
 
 export function CompletedTrainingHistoryClient() {
-  const [stories] = useState<TrainingStory[]>(getInitialTrainingStories);
+  const [stories, setStories] = useState<TrainingStory[]>(
+    getInitialTrainingStories
+  );
+
+  const [isLoadingBackendStories, setIsLoadingBackendStories] = useState(() =>
+    Boolean(authStorage.getToken())
+  );
+  const [backendError, setBackendError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const token = authStorage.getToken();
+
+    if (!token) return;
+
+    trainingStoryService
+      .getTrainingStories(token)
+      .then((backendStories) =>
+        Promise.all(
+          backendStories.map((backendStory) =>
+            trainingStoryService
+              .getFullTrainingStory(backendStory.id, token)
+              .catch(() => backendStory)
+          )
+        )
+      )
+      .then((fullBackendStories) => {
+        if (!isActive) return;
+
+        setStories(fullBackendStories);
+        setBackendError(null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+
+        setStories(getFallbackTrainingStories());
+        setBackendError(
+          "Could not load completed training history from backend. Showing local fallback stories."
+        );
+      })
+      .finally(() => {
+        if (!isActive) return;
+
+        setIsLoadingBackendStories(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const completedStories = useMemo(() => {
     return stories
@@ -61,6 +123,18 @@ export function CompletedTrainingHistoryClient() {
           sessions.
         </p>
       </header>
+
+      {isLoadingBackendStories && (
+        <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          Loading completed training history from backend...
+        </div>
+      )}
+
+      {backendError && (
+        <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+          {backendError}
+        </div>
+      )}
 
       <p className="text-sm text-muted-foreground">
         Showing {completedStories.length} completed training stories.
