@@ -30,11 +30,14 @@ export function getAllDrills(baseDrills: Drill[]): Drill[] {
 export function saveDrill(drill: Drill) {
   const drills = getStoredDrills();
 
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify([drill, ...drills])
-  );
+  const nextDrills = [
+    drill,
+    ...drills.filter((storedDrill) => storedDrill.id !== drill.id),
+  ];
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextDrills));
 }
+
 export function updateDrill(updatedDrill: Drill) {
   const drills = getStoredDrills();
 
@@ -47,4 +50,18 @@ export function updateDrill(updatedDrill: Drill) {
     : [updatedDrill, ...drills];
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextDrills));
+}
+
+export function deleteDrill(drillId: string) {
+  const drills = getStoredDrills();
+
+  const nextDrills = drills.filter((drill) => drill.id !== drillId);
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextDrills));
+}
+
+export function replaceStoredDrills(drills: Drill[]) {
+  if (typeof window === "undefined") return;
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(drills));
 }

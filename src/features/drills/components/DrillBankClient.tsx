@@ -10,7 +10,13 @@ import { authStorage } from "@/features/auth/utils/authStorage";
 
 import { drills as baseDrills } from "../data/drills";
 import { drillService } from "../services/drill.service";
-import { getAllDrills, saveDrill, updateDrill } from "../utils/drill-storage";
+import {
+    deleteDrill,
+    getAllDrills,
+    replaceStoredDrills,
+    saveDrill,
+    updateDrill
+} from "../utils/drill-storage";
 import { EditDrillForm } from "./EditDrillForm";
 
 import type { ActivityType } from "@/features/sessions";
@@ -94,6 +100,7 @@ export function DrillBankClient() {
                 if (!isActive) return;
 
                 setDrills(backendDrills);
+                replaceStoredDrills(backendDrills);
                 setBackendError(null);
             })
             .catch(() => {
@@ -247,10 +254,16 @@ export function DrillBankClient() {
         const token = authStorage.getToken();
 
         if (!token) {
-            setDrills((current) => current.filter((item) => item.id !== drill.id));
+            deleteDrill(drill.id);
+
+            setDrills((current) =>
+                current.filter((item) => item.id !== drill.id)
+            );
+
             setExpandedDrillIds((current) =>
                 current.filter((drillId) => drillId !== drill.id)
             );
+
             return;
         }
 
@@ -259,6 +272,7 @@ export function DrillBankClient() {
 
         try {
             await drillService.deleteDrill(drill.id, token);
+            deleteDrill(drill.id);
 
             setDrills((current) => current.filter((item) => item.id !== drill.id));
             setExpandedDrillIds((current) =>

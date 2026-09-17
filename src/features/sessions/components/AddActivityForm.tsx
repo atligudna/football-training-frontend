@@ -1,17 +1,20 @@
 "use client";
 
-import { FormEvent, useId, useState } from "react";
+import { FormEvent, useEffect, useId, useState } from "react";
 import { ChevronDown, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { drills as baseDrills } from "@/features/drills";
-import { getAllDrills } from "@/features/drills";
+import { authStorage } from "@/features/auth/utils/authStorage";
+import { drills as baseDrills } from "@/features/drills/data/drills";
+import { drillService } from "@/features/drills/services/drill.service";
+import { getAllDrills } from "@/features/drills/utils/drill-storage";
 
 import {
   formatEquipmentForTextarea,
   parseEquipmentText,
 } from "../utils/equipment-parser";
 
+import type { Drill } from "@/features/drills/types/drill";
 import type { Activity, ActivityType } from "../types/training-story";
 
 const activityTypes: ActivityType[] = [
@@ -26,6 +29,10 @@ interface AddActivityFormProps {
   onAddActivity: (activity: Activity) => void;
 }
 
+function getLocalFallbackDrills(): Drill[] {
+  return getAllDrills(baseDrills);
+}
+
 export function AddActivityForm({ onAddActivity }: AddActivityFormProps) {
   const formId = useId();
 
@@ -37,8 +44,52 @@ export function AddActivityForm({ onAddActivity }: AddActivityFormProps) {
   const [coachingPointsText, setCoachingPointsText] = useState("");
   const [playerFocusText, setPlayerFocusText] = useState("");
   const [equipmentText, setEquipmentText] = useState("");
-  const [availableDrills] = useState(() => getAllDrills(baseDrills));
+
+  const [availableDrills, setAvailableDrills] = useState<Drill[]>(() => {
+    const token = authStorage.getToken();
+
+    return token ? [] : getLocalFallbackDrills();
+  });
+
+  const [isLoadingBackendDrills, setIsLoadingBackendDrills] = useState(() =>
+    Boolean(authStorage.getToken())
+  );
+  const [drillLoadError, setDrillLoadError] = useState<string | null>(null);
   const [selectedDrillId, setSelectedDrillId] = useState("");
+
+  useEffect(() => {
+    let isActive = true;
+
+    const token = authStorage.getToken();
+
+    if (!token) return;
+
+    drillService
+      .getDrills(token)
+      .then((backendDrills) => {
+        if (!isActive) return;
+
+        setAvailableDrills(backendDrills);
+        setDrillLoadError(null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+
+        setAvailableDrills(getLocalFallbackDrills());
+        setDrillLoadError(
+          "Could not load backend drills. Showing local fallback drills."
+        );
+      })
+      .finally(() => {
+        if (!isActive) return;
+
+        setIsLoadingBackendDrills(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   function resetForm() {
     setTitle("");
@@ -170,9 +221,14 @@ export function AddActivityForm({ onAddActivity }: AddActivityFormProps) {
                   id={`${formId}-activity-drill-template`}
                   value={selectedDrillId}
                   onChange={(event) => handleSelectDrill(event.target.value)}
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  disabled={isLoadingBackendDrills}
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <option value="">Choose a drill...</option>
+                  <option value="">
+                    {isLoadingBackendDrills
+                      ? "Loading drills..."
+                      : "Choose a drill..."}
+                  </option>
 
                   {availableDrills.map((drill) => (
                     <option key={drill.id} value={drill.id}>
@@ -186,6 +242,10 @@ export function AddActivityForm({ onAddActivity }: AddActivityFormProps) {
                   Selecting a drill fills the activity form. You can still edit
                   everything before saving.
                 </p>
+
+                {drillLoadError && (
+                  <p className="text-xs text-destructive">{drillLoadError}</p>
+                )}
               </div>
             </div>
 
