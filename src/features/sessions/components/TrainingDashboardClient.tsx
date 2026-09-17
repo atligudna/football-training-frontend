@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
     Activity,
@@ -12,8 +12,10 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { authStorage } from "@/features/auth/utils/authStorage";
 
 import { trainingStories } from "../data/training-stories";
+import { trainingStoryService } from "../services/training-story.service";
 import { getAllTrainingStories } from "../utils/training-story-storage";
 
 import type { TrainingStory } from "../types/training-story";
@@ -47,16 +49,64 @@ function formatDate(dateString: string) {
 }
 
 export function TrainingDashboardClient() {
-    const [stories] = useState<TrainingStory[]>(getInitialTrainingStories);
+    const [stories, setStories] = useState<TrainingStory[]>(
+        getInitialTrainingStories
+    );
+
+    const [isLoadingBackendStories, setIsLoadingBackendStories] = useState(() =>
+        Boolean(authStorage.getToken())
+    );
+    const [backendError, setBackendError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let isActive = true;
+
+        const token = authStorage.getToken();
+
+        if (!token) return;
+
+        trainingStoryService
+            .getTrainingStories(token)
+            .then((backendStories) =>
+                Promise.all(
+                    backendStories.map((backendStory) =>
+                        trainingStoryService
+                            .getFullTrainingStory(backendStory.id, token)
+                            .catch(() => backendStory)
+                    )
+                )
+            )
+            .then((fullBackendStories) => {
+                if (!isActive) return;
+
+                setStories(fullBackendStories);
+                setBackendError(null);
+            })
+            .catch(() => {
+                if (!isActive) return;
+
+                setBackendError(
+                    "Could not load dashboard from backend. Showing local data instead."
+                );
+            })
+            .finally(() => {
+                if (!isActive) return;
+
+                setIsLoadingBackendStories(false);
+            });
+
+        return () => {
+            isActive = false;
+        };
+    }, []);
 
     const dashboardData = useMemo(() => {
+        const draftStories = stories.filter((story) => story.status === "draft");
         const plannedStories = stories.filter(
             (story) => story.status === "planned"
         );
 
-        const activeStories = stories.filter(
-            (story) => story.status === "active"
-        );
+        const activeStories = stories.filter((story) => story.status === "active");
 
         const completedStories = stories
             .filter((story) => story.status === "completed" || Boolean(story.review))
@@ -68,9 +118,11 @@ export function TrainingDashboardClient() {
             });
 
         return {
+            draftStories,
             plannedStories,
             activeStories,
             completedStories,
+            totalStories: stories.length,
             averageRating: getAverageRating(completedStories),
         };
     }, [stories]);
@@ -85,7 +137,31 @@ export function TrainingDashboardClient() {
                 </p>
             </header>
 
-            <div className="grid gap-4 md:grid-cols-4">
+            {isLoadingBackendStories && (
+                <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                    Loading dashboard from backend...
+                </div>
+            )}
+
+            {backendError && (
+                <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+                    {backendError}
+                </div>
+            )}
+
+            <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+                <Card className="p-5">
+                    <div className="flex items-center gap-3">
+                        <ClipboardCheck className="h-5 w-5" />
+                        <p className="text-sm font-medium text-muted-foreground">
+                            Draft
+                        </p>
+                    </div>
+
+                    <p className="mt-3 text-3xl font-bold">
+                        {dashboardData.draftStories.length}
+                    </p>
+                </Card>
                 <Card className="p-5">
                     <div className="flex items-center gap-3">
                         <CalendarCheck className="h-5 w-5" />
@@ -102,9 +178,7 @@ export function TrainingDashboardClient() {
                 <Card className="p-5">
                     <div className="flex items-center gap-3">
                         <Play className="h-5 w-5" />
-                        <p className="text-sm font-medium text-muted-foreground">
-                            Active
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground">Active</p>
                     </div>
 
                     <p className="mt-3 text-3xl font-bold">
@@ -124,7 +198,18 @@ export function TrainingDashboardClient() {
                         {dashboardData.completedStories.length}
                     </p>
                 </Card>
+                <Card className="p-5">
+                    <div className="flex items-center gap-3">
+                        <Activity className="h-5 w-5" />
+                        <p className="text-sm font-medium text-muted-foreground">
+                            Total
+                        </p>
+                    </div>
 
+                    <p className="mt-3 text-3xl font-bold">
+                        {dashboardData.totalStories}
+                    </p>
+                </Card>
                 <Card className="p-5">
                     <div className="flex items-center gap-3">
                         <Star className="h-5 w-5" />
