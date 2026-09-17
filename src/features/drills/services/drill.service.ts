@@ -53,4 +53,26 @@ export const drillService = {
   async deleteDrill(id: string, token: string): Promise<ApiResponse<null>> {
     return api.delete<ApiResponse<null>>(`/drills/${id}`, token);
   },
+
+  async getDeletedDrills(token: string): Promise<Drill[]> {
+    const response = await api.get<ApiResponse<Drill[]>>(
+      "/drills/history",
+      token
+    );
+
+    return response.data;
+  },
+
+  async restoreDrill(
+    id: string,
+    token: string
+  ): Promise<Drill> {
+    const response = await api.post<ApiResponse<Drill>>(
+      `/drills/${id}/restore`,
+      {},
+      token
+    );
+
+    return response.data;
+  },
 };

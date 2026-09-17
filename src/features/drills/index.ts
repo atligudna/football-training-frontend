@@ -3,3 +3,5 @@ export * from "./data/drills";
 export * from "./utils/drill-storage";
 export * from "./components/DrillBankClient";
 export * from "./services/drill.service";
+export * from "./components/DrillTemplatesClient";
+export * from "./components/DrillHistoryClient";
