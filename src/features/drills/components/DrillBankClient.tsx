@@ -1,17 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { ChevronDown, ChevronUp, Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { authStorage } from "@/features/auth/utils/authStorage";
 
 import { drills as baseDrills } from "../data/drills";
+import { drillService } from "../services/drill.service";
 import { getAllDrills, saveDrill } from "../utils/drill-storage";
 
 import type { ActivityType } from "@/features/sessions";
 import type { Drill } from "../types/drill";
+import type { CreateDrillPayload } from "../services/drill.service";
 
 const drillTypes: ActivityType[] = [
   "drill",
@@ -21,7 +24,7 @@ const drillTypes: ActivityType[] = [
   "reflection",
 ];
 
-function getInitialDrills(): Drill[] {
+function getLocalFallbackDrills(): Drill[] {
   return getAllDrills(baseDrills);
 }
 
@@ -32,11 +35,38 @@ function textToLines(text: string) {
     .filter(Boolean);
 }
 
+function parseEquipmentText(text: string) {
+  return textToLines(text).map((line) => {
+    const [namePart, quantityPart] = line.includes(":")
+      ? line.split(":")
+      : line.split(",");
+
+    const quantity = Number(quantityPart?.trim() || 1);
+
+    return {
+      id: crypto.randomUUID(),
+      name: namePart.trim(),
+      quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+    };
+  });
+}
+
 export function DrillBankClient() {
-  const [drills, setDrills] = useState<Drill[]>(getInitialDrills);
+  const [drills, setDrills] = useState<Drill[]>(() => {
+    const token = authStorage.getToken();
+
+    return token ? [] : getLocalFallbackDrills();
+  });
+
   const [searchText, setSearchText] = useState("");
   const [expandedDrillIds, setExpandedDrillIds] = useState<string[]>([]);
   const [isAddDrillOpen, setIsAddDrillOpen] = useState(false);
+
+  const [isLoadingBackendDrills, setIsLoadingBackendDrills] = useState(() =>
+    Boolean(authStorage.getToken())
+  );
+  const [backendError, setBackendError] = useState<string | null>(null);
+  const [isSavingBackendDrill, setIsSavingBackendDrill] = useState(false);
 
   const [title, setTitle] = useState("");
   const [type, setType] = useState<ActivityType>("drill");
@@ -46,6 +76,40 @@ export function DrillBankClient() {
   const [tagsText, setTagsText] = useState("");
   const [coachingPointsText, setCoachingPointsText] = useState("");
   const [equipmentText, setEquipmentText] = useState("");
+
+  useEffect(() => {
+    let isActive = true;
+
+    const token = authStorage.getToken();
+
+    if (!token) return;
+
+    drillService
+      .getDrills(token)
+      .then((backendDrills) => {
+        if (!isActive) return;
+
+        setDrills(backendDrills);
+        setBackendError(null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+
+        setDrills(getLocalFallbackDrills());
+        setBackendError(
+          "Could not load drills from backend. Showing local fallback drills."
+        );
+      })
+      .finally(() => {
+        if (!isActive) return;
+
+        setIsLoadingBackendDrills(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const filteredDrills = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -99,18 +163,20 @@ export function DrillBankClient() {
     );
   }
 
-  function handleAddDrill(event: FormEvent<HTMLFormElement>) {
+  async function handleAddDrill(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const now = new Date().toISOString();
+    const safeDurationMinutes =
+      Number.isFinite(durationMinutes) && durationMinutes > 0
+        ? durationMinutes
+        : 1;
 
-    const drill: Drill = {
-      id: crypto.randomUUID(),
+    const drillPayload: CreateDrillPayload = {
       title: title.trim(),
       type,
       description: description.trim(),
-      durationMinutes,
-      ageGroup: ageGroup.trim(),
+      durationMinutes: safeDurationMinutes,
+      ageGroup: ageGroup.trim() || undefined,
       tags: tagsText
         .split(",")
         .map((tag) => tag.trim())
@@ -119,28 +185,47 @@ export function DrillBankClient() {
         id: crypto.randomUUID(),
         text,
       })),
-      equipment: textToLines(equipmentText).map((line) => {
-        const [namePart, quantityPart] = line.includes(":")
-          ? line.split(":")
-          : line.split(",");
-
-        const quantity = Number(quantityPart?.trim() || 1);
-
-        return {
-          id: crypto.randomUUID(),
-          name: namePart.trim(),
-          quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
-        };
-      }),
-      createdAt: now,
-      updatedAt: now,
+      equipment: parseEquipmentText(equipmentText),
     };
 
-    saveDrill(drill);
-    setDrills((current) => [drill, ...current]);
+    const token = authStorage.getToken();
 
-    resetForm();
-    setIsAddDrillOpen(false);
+    if (!token) {
+      const now = new Date().toISOString();
+
+      const localDrill: Drill = {
+        ...drillPayload,
+        id: crypto.randomUUID(),
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      saveDrill(localDrill);
+      setDrills((current) => [localDrill, ...current]);
+      resetForm();
+      setIsAddDrillOpen(false);
+      return;
+    }
+
+    setIsSavingBackendDrill(true);
+    setBackendError(null);
+
+    try {
+      const savedDrill = await drillService.createDrill(drillPayload, token);
+
+      saveDrill(savedDrill);
+      setDrills((current) => [
+        savedDrill,
+        ...current.filter((drill) => drill.id !== savedDrill.id),
+      ]);
+
+      resetForm();
+      setIsAddDrillOpen(false);
+    } catch {
+      setBackendError("Could not save drill to backend.");
+    } finally {
+      setIsSavingBackendDrill(false);
+    }
   }
 
   function handleCancelAddDrill() {
@@ -156,6 +241,24 @@ export function DrillBankClient() {
           Store reusable football drills for future training stories.
         </p>
       </header>
+
+      {isLoadingBackendDrills && (
+        <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          Loading drills from backend...
+        </div>
+      )}
+
+      {backendError && (
+        <div className="rounded-lg border border-destructive/40 px-4 py-3 text-sm text-destructive">
+          {backendError}
+        </div>
+      )}
+
+      {isSavingBackendDrill && (
+        <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          Saving drill to backend...
+        </div>
+      )}
 
       <section className="rounded-xl border">
         <button
@@ -327,13 +430,14 @@ export function DrillBankClient() {
                 type="button"
                 variant="secondary"
                 onClick={handleCancelAddDrill}
+                disabled={isSavingBackendDrill}
               >
                 Cancel
               </Button>
 
-              <Button type="submit">
+              <Button type="submit" disabled={isSavingBackendDrill}>
                 <Plus className="h-4 w-4" />
-                Add drill
+                {isSavingBackendDrill ? "Saving..." : "Add drill"}
               </Button>
             </div>
           </form>
@@ -366,8 +470,8 @@ export function DrillBankClient() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
-                      {drill.ageGroup} · {drill.type} · {drill.durationMinutes}{" "}
-                      min
+                      {drill.ageGroup ?? "No age group"} · {drill.type} ·{" "}
+                      {drill.durationMinutes} min
                     </p>
                     <h2 className="mt-1 text-xl font-semibold">
                       {drill.title}
