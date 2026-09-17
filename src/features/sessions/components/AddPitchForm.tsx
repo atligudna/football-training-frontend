@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { ChevronDown, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -32,23 +32,19 @@ export function AddPitchForm({
   const [coachName, setCoachName] = useState("");
   const [playerGroup, setPlayerGroup] = useState("");
 
-  useEffect(() => {
-    if (availablePitchNames.length === 0) {
-      setIsOpen(false);
-      return;
-    }
-
-    if (!availablePitchNames.includes(name)) {
-      setName(availablePitchNames[0]);
-    }
-  }, [availablePitchNames, name]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    const selectedPitchName = availablePitchNames.includes(name)
+      ? name
+      : availablePitchNames[0];
+
+    if (!selectedPitchName) return;
+
     const pitch: Pitch = {
       id: crypto.randomUUID(),
-      name,
+      name: selectedPitchName,
       coachName: coachName.trim() || undefined,
       playerGroup: playerGroup.trim() || undefined,
       order: existingPitches.length + 1,
@@ -74,7 +70,10 @@ export function AddPitchForm({
     <section className="rounded-xl border">
       <button
         type="button"
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={() => {
+          setName(availablePitchNames[0]);
+          setIsOpen((current) => !current);
+        }}
         className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition hover:bg-muted/40"
       >
         <div>
@@ -88,9 +87,8 @@ export function AddPitchForm({
           <Plus className="h-4 w-4" />
           <span>{isOpen ? "Close" : "Open"}</span>
           <ChevronDown
-            className={`h-4 w-4 transition-transform ${
-              isOpen ? "rotate-180" : ""
-            }`}
+            className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""
+              }`}
           />
         </div>
       </button>
