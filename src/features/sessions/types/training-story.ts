@@ -70,6 +70,7 @@ export interface Pitch {
   name: PitchName;
   coachName?: string;
   playerGroup?: string;
+  groupId?: string;
   order: number;
   activityBlocks: ActivityBlock[];
 }

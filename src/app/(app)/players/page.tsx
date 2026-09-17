@@ -1,3 +1,5 @@
-export default function EquipmentPage() {
-  return <h1>Squad</h1>;
+import { SquadClient } from "@/features/players/components/SquadClient";
+
+export default function PlayersPage() {
+  return <SquadClient />;
 }
