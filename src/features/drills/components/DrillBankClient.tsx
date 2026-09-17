@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { ChevronDown, ChevronUp, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Search, Trash2, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,7 +10,8 @@ import { authStorage } from "@/features/auth/utils/authStorage";
 
 import { drills as baseDrills } from "../data/drills";
 import { drillService } from "../services/drill.service";
-import { getAllDrills, saveDrill } from "../utils/drill-storage";
+import { getAllDrills, saveDrill, updateDrill } from "../utils/drill-storage";
+import { EditDrillForm } from "./EditDrillForm";
 
 import type { ActivityType } from "@/features/sessions";
 import type { Drill } from "../types/drill";
@@ -68,6 +69,8 @@ export function DrillBankClient() {
     const [backendError, setBackendError] = useState<string | null>(null);
     const [isSavingBackendDrill, setIsSavingBackendDrill] = useState(false);
     const [deletingDrillId, setDeletingDrillId] = useState<string | null>(null);
+    const [editingDrillId, setEditingDrillId] = useState<string | null>(null);
+    const [isUpdatingBackendDrill, setIsUpdatingBackendDrill] = useState(false);
 
     const [title, setTitle] = useState("");
     const [type, setType] = useState<ActivityType>("drill");
@@ -265,6 +268,57 @@ export function DrillBankClient() {
             setBackendError("Could not delete drill from backend.");
         } finally {
             setDeletingDrillId(null);
+        }
+    }
+
+    async function handleSaveEditedDrill(updatedDrill: Drill) {
+        const token = authStorage.getToken();
+
+        if (!token) {
+            updateDrill(updatedDrill);
+
+            setDrills((current) =>
+                current.map((drill) =>
+                    drill.id === updatedDrill.id ? updatedDrill : drill
+                )
+            );
+
+            setEditingDrillId(null);
+            return;
+        }
+
+        setIsUpdatingBackendDrill(true);
+        setBackendError(null);
+
+        try {
+            const savedDrill = await drillService.updateDrill(
+                updatedDrill.id,
+                {
+                    title: updatedDrill.title,
+                    type: updatedDrill.type,
+                    description: updatedDrill.description,
+                    durationMinutes: updatedDrill.durationMinutes,
+                    ageGroup: updatedDrill.ageGroup,
+                    tags: updatedDrill.tags,
+                    coachingPoints: updatedDrill.coachingPoints,
+                    equipment: updatedDrill.equipment,
+                },
+                token
+            );
+
+            updateDrill(savedDrill);
+
+            setDrills((current) =>
+                current.map((drill) =>
+                    drill.id === savedDrill.id ? savedDrill : drill
+                )
+            );
+
+            setEditingDrillId(null);
+        } catch {
+            setBackendError("Could not update drill in backend.");
+        } finally {
+            setIsUpdatingBackendDrill(false);
         }
     }
 
@@ -498,32 +552,58 @@ export function DrillBankClient() {
                         const isExpanded = isDrillExpanded(drill.id);
                         const isCollapsible = shouldCollapseDrill(drill);
                         const shouldShowFullContent = !isCollapsible || isExpanded;
-
+                        if (editingDrillId === drill.id) {
+                            return (
+                                <Card key={drill.id} className="p-6">
+                                    <EditDrillForm
+                                        drill={drill}
+                                        onSave={handleSaveEditedDrill}
+                                        onCancel={() => setEditingDrillId(null)}
+                                        isSaving={isUpdatingBackendDrill}
+                                    />
+                                </Card>
+                            );
+                        }
                         return (
                             <Card key={drill.id} className="p-6">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div>
+                                <div className="flex w-full items-start gap-4">
+                                    <div className="min-w-0 flex-1">
                                         <p className="text-sm font-medium text-muted-foreground">
                                             {drill.ageGroup ?? "No age group"} · {drill.type} ·{" "}
                                             {drill.durationMinutes} min
                                         </p>
-                                        <h2 className="mt-1 text-xl font-semibold">{drill.title}</h2>
+
+                                        <h2 className="mt-1 text-xl font-semibold">
+                                            {drill.title}
+                                        </h2>
+
                                         <p className="mt-2 text-sm text-muted-foreground">
                                             {drill.description}
                                         </p>
                                     </div>
 
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDeleteDrill(drill)}
-                                        disabled={deletingDrillId === drill.id}
-                                        aria-label={`Delete ${drill.title}`}
-                                        className="shrink-0"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                    <div className="ml-auto flex shrink-0 items-center gap-1">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setEditingDrillId(drill.id)}
+                                            aria-label={`Edit ${drill.title}`}
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleDeleteDrill(drill)}
+                                            disabled={deletingDrillId === drill.id}
+                                            aria-label={`Delete ${drill.title}`}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                                 {drill.tags.length > 0 && (
                                     <div className="mt-4 flex flex-wrap gap-2">

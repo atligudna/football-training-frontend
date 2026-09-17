@@ -35,3 +35,16 @@ export function saveDrill(drill: Drill) {
     JSON.stringify([drill, ...drills])
   );
 }
+export function updateDrill(updatedDrill: Drill) {
+  const drills = getStoredDrills();
+
+  const exists = drills.some((drill) => drill.id === updatedDrill.id);
+
+  const nextDrills = exists
+    ? drills.map((drill) =>
+      drill.id === updatedDrill.id ? updatedDrill : drill
+    )
+    : [updatedDrill, ...drills];
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextDrills));
+}
