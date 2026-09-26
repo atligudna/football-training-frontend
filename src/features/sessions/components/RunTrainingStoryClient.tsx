@@ -14,7 +14,7 @@ import {
   RotateCcw,
   Trash2,
 } from "lucide-react";
-
+import { RunPitchInfo } from "./RunPitchInfo";
 import { Button } from "@/components/ui/button";
 import { authStorage } from "@/features/auth/utils/authStorage";
 
@@ -28,6 +28,8 @@ import {
   getRunProgress,
   saveRunProgress,
 } from "../utils/run-progress-storage";
+import { RunTrainingReadiness } from "./RunTrainingReadiness";
+import { RunPitchOverview } from "./RunPitchOverview";
 
 import type { Activity, TrainingStory } from "../types/training-story";
 import type { RunNote } from "../utils/run-progress-storage";
@@ -38,16 +40,24 @@ interface RunTrainingStoryClientProps {
 
 interface RunActivityItem {
   pitchName: string;
+  playerGroup?: string;
+  groupId?: string;
+  coachName?: string;
   blockTitle: string;
   blockType: string;
   activity: Activity;
 }
 
-function getRunActivities(story: TrainingStory): RunActivityItem[] {
+function getRunActivities(
+  story: TrainingStory
+): RunActivityItem[] {
   return story.pitches.flatMap((pitch) =>
     pitch.activityBlocks.flatMap((block) =>
       block.activities.map((activity) => ({
         pitchName: pitch.name,
+        playerGroup: pitch.playerGroup,
+        groupId: pitch.groupId,
+        coachName: pitch.coachName,
         blockTitle: block.title,
         blockType: block.type,
         activity,
@@ -304,7 +314,7 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
   const timerProgressPercent =
     totalActivitySeconds > 0
       ? ((totalActivitySeconds - secondsRemaining) / totalActivitySeconds) *
-        100
+      100
       : 0;
 
   const totalRunSeconds = getTotalRunSeconds(runActivities);
@@ -594,6 +604,16 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
         </div>
       </header>
 
+      <RunTrainingReadiness
+        story={story}
+      />
+      <RunTrainingReadiness
+        story={story}
+      />
+
+      <RunPitchOverview
+        story={story}
+      />
       {runActivities.length === 0 || !currentActivity ? (
         <div className="rounded-xl border border-dashed p-10 text-center">
           <h2 className="text-xl font-semibold">No activities to run</h2>
@@ -733,14 +753,27 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
           </section>
 
           <article className="rounded-xl border p-4 sm:p-6">
-            <p className="text-sm font-medium text-muted-foreground">
-              {currentActivity.pitchName} · {currentActivity.blockTitle} ·{" "}
-              {currentActivity.blockType}
-            </p>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                {currentActivity.pitchName} ·{" "}
+                {currentActivity.blockTitle} ·{" "}
+                {currentActivity.blockType}
+              </p>
 
-            <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-              {currentActivity.activity.title}
-            </h2>
+              <div className="mt-3">
+                <RunPitchInfo
+                  playerGroup={
+                    currentActivity.playerGroup
+                  }
+                  groupId={
+                    currentActivity.groupId
+                  }
+                  coachName={
+                    currentActivity.coachName
+                  }
+                />
+              </div>
+            </div>
 
             {currentActivity.activity.description && (
               <p className="mt-4 text-lg text-muted-foreground">
