@@ -16,9 +16,9 @@ import { Button } from "@/components/ui/button";
 
 import { authStorage } from "@/features/auth/utils/authStorage";
 import { groupService } from "@/features/players/services/group.service";
-
+import { coachService } from "@/features/coaches/services/coach.service";
 import type { PlayerGroup } from "@/features/players/types/group";
-
+import type { Coach } from "@/features/coaches/types/coach";
 import type {
   Pitch,
   PitchName,
@@ -55,8 +55,25 @@ export function AddPitchForm({
     availablePitchNames[0] ?? "Pitch A"
   );
 
-  const [coachName, setCoachName] =
-    useState("");
+  const [coaches, setCoaches] =
+    useState<Coach[]>([]);
+
+  const [
+    selectedCoachId,
+    setSelectedCoachId,
+  ] = useState("");
+
+  const [
+    isLoadingCoaches,
+    setIsLoadingCoaches,
+  ] = useState(() =>
+    Boolean(authStorage.getToken())
+  );
+
+  const [
+    coachError,
+    setCoachError,
+  ] = useState<string | null>(null);
 
   const [groups, setGroups] = useState<
     PlayerGroup[]
@@ -107,6 +124,38 @@ export function AddPitchForm({
       isActive = false;
     };
   }, []);
+  useEffect(() => {
+    let isActive = true;
+
+    const token = authStorage.getToken();
+
+    if (!token) return;
+
+    coachService
+      .getCoaches(token)
+      .then((backendCoaches) => {
+        if (!isActive) return;
+
+        setCoaches(backendCoaches);
+        setCoachError(null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+
+        setCoachError(
+          "Could not load coaches."
+        );
+      })
+      .finally(() => {
+        if (!isActive) return;
+
+        setIsLoadingCoaches(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -124,12 +173,19 @@ export function AddPitchForm({
       (group) => group.id === selectedGroupId
     );
 
+    const selectedCoach = coaches.find(
+      (coach) => coach.id === selectedCoachId
+    );
+
     const pitch: Pitch = {
       id: crypto.randomUUID(),
       name: selectedPitchName,
 
       coachName:
-        coachName.trim() || undefined,
+        selectedCoach?.name,
+
+      coachId:
+        selectedCoach?.id,
 
       playerGroup:
         selectedGroup?.name,
@@ -143,7 +199,7 @@ export function AddPitchForm({
 
     onAddPitch(pitch);
 
-    setCoachName("");
+    setSelectedCoachId("");
     setSelectedGroupId("");
     setIsOpen(false);
   }
@@ -190,11 +246,10 @@ export function AddPitchForm({
           </span>
 
           <ChevronDown
-            className={`h-4 w-4 transition-transform ${
-              isOpen
-                ? "rotate-180"
-                : ""
-            }`}
+            className={`h-4 w-4 transition-transform ${isOpen
+              ? "rotate-180"
+              : ""
+              }`}
           />
         </div>
       </button>
@@ -240,22 +295,45 @@ export function AddPitchForm({
             <div className="space-y-2">
               <label
                 className="text-sm font-medium"
-                htmlFor="coachName"
+                htmlFor="coachId"
               >
                 Coach
               </label>
 
-              <input
-                id="coachName"
-                value={coachName}
+              <select
+                id="coachId"
+                value={selectedCoachId}
                 onChange={(event) =>
-                  setCoachName(
+                  setSelectedCoachId(
                     event.target.value
                   )
                 }
-                placeholder="Atli"
+                disabled={isLoadingCoaches}
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-              />
+              >
+                <option value="">
+                  {isLoadingCoaches
+                    ? "Loading coaches..."
+                    : "No coach"}
+                </option>
+
+                {coaches
+                  .filter((coach) => coach.active)
+                  .map((coach) => (
+                    <option
+                      key={coach.id}
+                      value={coach.id}
+                    >
+                      {coach.name}
+                    </option>
+                  ))}
+              </select>
+
+              {coachError && (
+                <p className="text-xs text-destructive">
+                  {coachError}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">

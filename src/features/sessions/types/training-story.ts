@@ -69,6 +69,7 @@ export interface Pitch {
   id: string;
   name: PitchName;
   coachName?: string;
+  coachId?: string;
   playerGroup?: string;
   groupId?: string;
   order: number;

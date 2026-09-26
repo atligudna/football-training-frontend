@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 
+import { CoachesClient } from "@/features/coaches/components/CoachesClient";
+
 import { GroupsClient } from "./GroupsClient";
 import { PlayersClient } from "./PlayersClient";
 
-type SquadTab = "players" | "groups";
+type SquadTab =
+  | "players"
+  | "groups"
+  | "coaches";
 
 export function SquadClient() {
   const [activeTab, setActiveTab] =
@@ -41,12 +46,32 @@ export function SquadClient() {
         >
           Groups
         </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            setActiveTab("coaches")
+          }
+          className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+            activeTab === "coaches"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Coaches
+        </button>
       </div>
 
-      {activeTab === "players" ? (
+      {activeTab === "players" && (
         <PlayersClient />
-      ) : (
+      )}
+
+      {activeTab === "groups" && (
         <GroupsClient />
+      )}
+
+      {activeTab === "coaches" && (
+        <CoachesClient />
       )}
     </div>
   );

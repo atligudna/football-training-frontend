@@ -22,6 +22,7 @@ import { PitchSection } from "./PitchSection";
 import { authStorage } from "@/features/auth/utils/authStorage";
 import { trainingStoryService } from "../services/training-story.service";
 import { TrainingStoryValidation } from "./TrainingStoryValidation";
+import { TrainingStoryCoachOverview } from "./TrainingStoryCoachOverview";
 
 import type {
     Activity,
@@ -541,7 +542,9 @@ export function TrainingStoryDetailClient({
             )}
 
             <TrainingStorySummaryCards story={story} />
-
+            <TrainingStoryCoachOverview
+                story={story}
+            />
             <TrainingStoryValidation story={story} />
             {undoSnapshot && (
                 <div className="fixed bottom-6 right-6 z-50 flex min-w-80 items-center justify-between gap-4 rounded-lg border bg-background px-4 py-3 shadow-lg">

@@ -30,6 +30,7 @@ import {
 } from "../utils/run-progress-storage";
 import { RunTrainingReadiness } from "./RunTrainingReadiness";
 import { RunPitchOverview } from "./RunPitchOverview";
+import { TrainingStoryCoachOverview } from "./TrainingStoryCoachOverview";
 
 import type { Activity, TrainingStory } from "../types/training-story";
 import type { RunNote } from "../utils/run-progress-storage";
@@ -605,6 +606,9 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
       </header>
 
       <RunTrainingReadiness
+        story={story}
+      />
+      <TrainingStoryCoachOverview
         story={story}
       />
       <RunTrainingReadiness

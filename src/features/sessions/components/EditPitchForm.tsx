@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 
 import { authStorage } from "@/features/auth/utils/authStorage";
 import { groupService } from "@/features/players/services/group.service";
-
+import { coachService } from "@/features/coaches/services/coach.service";
+import type { Coach } from "@/features/coaches/types/coach";
 import type { PlayerGroup } from "@/features/players/types/group";
 
 import type {
@@ -27,6 +28,8 @@ const pitchNames: PitchName[] = [
 
 const LEGACY_GROUP_VALUE =
   "__legacy_group__";
+const LEGACY_COACH_VALUE =
+  "__legacy_coach__";
 
 interface EditPitchFormProps {
   pitch: Pitch;
@@ -44,8 +47,35 @@ export function EditPitchForm({
   const [name, setName] =
     useState<PitchName>(pitch.name);
 
-  const [coachName, setCoachName] =
-    useState(pitch.coachName ?? "");
+  const [coaches, setCoaches] =
+    useState<Coach[]>([]);
+
+  const [
+    selectedCoachId,
+    setSelectedCoachId,
+  ] = useState(() => {
+    if (pitch.coachId) {
+      return pitch.coachId;
+    }
+
+    if (pitch.coachName) {
+      return LEGACY_COACH_VALUE;
+    }
+
+    return "";
+  });
+
+  const [
+    isLoadingCoaches,
+    setIsLoadingCoaches,
+  ] = useState(() =>
+    Boolean(authStorage.getToken())
+  );
+
+  const [
+    coachError,
+    setCoachError,
+  ] = useState<string | null>(null);
 
   const [groups, setGroups] = useState<
     PlayerGroup[]
@@ -107,6 +137,39 @@ export function EditPitchForm({
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    const token = authStorage.getToken();
+
+    if (!token) return;
+
+    coachService
+      .getCoaches(token)
+      .then((backendCoaches) => {
+        if (!isActive) return;
+
+        setCoaches(backendCoaches);
+        setCoachError(null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+
+        setCoachError(
+          "Could not load coaches."
+        );
+      })
+      .finally(() => {
+        if (!isActive) return;
+
+        setIsLoadingCoaches(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const availablePitchNames =
     pitchNames.filter((pitchName) => {
       if (pitchName === pitch.name) {
@@ -124,7 +187,43 @@ export function EditPitchForm({
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
+    let nextCoachId:
+      | string
+      | undefined;
 
+    let nextCoachName:
+      | string
+      | undefined;
+
+    if (
+      selectedCoachId ===
+      LEGACY_COACH_VALUE
+    ) {
+      nextCoachId = undefined;
+      nextCoachName =
+        pitch.coachName;
+    } else if (selectedCoachId) {
+      const selectedCoach =
+        coaches.find(
+          (coach) =>
+            coach.id ===
+            selectedCoachId
+        );
+
+      if (selectedCoach) {
+        nextCoachId =
+          selectedCoach.id;
+
+        nextCoachName =
+          selectedCoach.name;
+      } else {
+        nextCoachId =
+          pitch.coachId;
+
+        nextCoachName =
+          pitch.coachName;
+      }
+    }
     let nextGroupId:
       | string
       | undefined;
@@ -168,7 +267,10 @@ export function EditPitchForm({
       name,
 
       coachName:
-        coachName.trim() || undefined,
+        nextCoachName,
+
+      coachId:
+        nextCoachId,
 
       playerGroup:
         nextPlayerGroup,
@@ -230,17 +332,52 @@ export function EditPitchForm({
             Coach
           </label>
 
-          <input
+          <select
             id={`edit-pitch-coach-${pitch.id}`}
-            value={coachName}
+            value={selectedCoachId}
             onChange={(event) =>
-              setCoachName(
+              setSelectedCoachId(
                 event.target.value
               )
             }
-            placeholder="Atli"
+            disabled={isLoadingCoaches}
             className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-          />
+          >
+            <option value="">
+              {isLoadingCoaches
+                ? "Loading coaches..."
+                : "No coach"}
+            </option>
+
+            {pitch.coachName &&
+              !pitch.coachId && (
+                <option
+                  value={
+                    LEGACY_COACH_VALUE
+                  }
+                >
+                  {pitch.coachName} — old value
+                </option>
+              )}
+
+            {coaches.map((coach) => (
+              <option
+                key={coach.id}
+                value={coach.id}
+              >
+                {coach.name}
+                {!coach.active
+                  ? " — inactive"
+                  : ""}
+              </option>
+            ))}
+          </select>
+
+          {coachError && (
+            <p className="text-xs text-destructive">
+              {coachError}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
