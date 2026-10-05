@@ -7,9 +7,13 @@ import type {
   Pitch,
   TrainingStory,
 } from "../types/training-story";
+import type {
+  TrainingAttendancePlayer,
+} from "@/features/attendance";
 
 interface PitchSectionProps {
   story: TrainingStory;
+  attendancePlayers: TrainingAttendancePlayer[];
   onAddPitch: (pitch: Pitch) => void;
   onSavePitch: (pitch: Pitch) => void;
   onDeletePitch: (pitchId: string) => void;
@@ -44,6 +48,7 @@ interface PitchSectionProps {
 
 export function PitchSection({
   story,
+  attendancePlayers,
   onAddPitch,
   onSavePitch,
   onDeletePitch,
@@ -74,6 +79,7 @@ export function PitchSection({
               <PitchCard
                 key={pitch.id}
                 pitch={pitch}
+                attendancePlayers={attendancePlayers}
                 existingPitches={story.pitches}
                 onSavePitch={onSavePitch}
                 onAddActivityBlock={(activityBlock) =>

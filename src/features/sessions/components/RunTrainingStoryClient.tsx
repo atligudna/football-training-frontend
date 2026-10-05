@@ -34,6 +34,9 @@ import { TrainingStoryCoachOverview } from "./TrainingStoryCoachOverview";
 
 import type { Activity, TrainingStory } from "../types/training-story";
 import type { RunNote } from "../utils/run-progress-storage";
+import {
+  RunAttendanceOverview,
+} from "@/features/attendance";
 
 interface RunTrainingStoryClientProps {
   id: string;
@@ -617,6 +620,11 @@ export function RunTrainingStoryClient({ id }: RunTrainingStoryClientProps) {
 
       <RunPitchOverview
         story={story}
+      />
+
+      <RunAttendanceOverview
+        storyId={story.id}
+        pitches={story.pitches}
       />
       {runActivities.length === 0 || !currentActivity ? (
         <div className="rounded-xl border border-dashed p-10 text-center">

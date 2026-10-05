@@ -23,13 +23,17 @@ import { authStorage } from "@/features/auth/utils/authStorage";
 import { trainingStoryService } from "../services/training-story.service";
 import { TrainingStoryValidation } from "./TrainingStoryValidation";
 import { TrainingStoryCoachOverview } from "./TrainingStoryCoachOverview";
-
+import {
+    TrainingAttendance,
+    type TrainingAttendancePlayer
+} from "@/features/attendance";
 import type {
     Activity,
     ActivityBlock,
     Pitch,
     TrainingStory,
 } from "../types/training-story";
+
 
 interface TrainingStoryDetailClientProps {
     id: string;
@@ -59,6 +63,7 @@ export function TrainingStoryDetailClient({
     const [backendDeleteError, setBackendDeleteError] = useState<string | null>(
         null
     );
+    const [attendancePlayers, setAttendancePlayers,] = useState<TrainingAttendancePlayer[]>([]);
 
     useEffect(() => {
         let isActive = true;
@@ -541,11 +546,25 @@ export function TrainingStoryDetailClient({
                 />
             )}
 
-            <TrainingStorySummaryCards story={story} />
+            <TrainingStorySummaryCards
+                story={story}
+            />
+
             <TrainingStoryCoachOverview
                 story={story}
             />
-            <TrainingStoryValidation story={story} />
+
+            <TrainingAttendance
+                storyId={story.id}
+                onAttendanceChange={
+                    setAttendancePlayers
+                }
+            />
+
+            <TrainingStoryValidation
+                story={story}
+            />
+
             {undoSnapshot && (
                 <div className="fixed bottom-6 right-6 z-50 flex min-w-80 items-center justify-between gap-4 rounded-lg border bg-background px-4 py-3 shadow-lg">
                     <p className="text-sm font-medium">{undoMessage}</p>
@@ -560,6 +579,7 @@ export function TrainingStoryDetailClient({
 
             <PitchSection
                 story={story}
+                attendancePlayers={attendancePlayers}
                 onAddPitch={handleAddPitch}
                 onSavePitch={handleSavePitch}
                 onDeletePitch={handleDeletePitch}

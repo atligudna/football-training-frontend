@@ -20,9 +20,13 @@ import type {
   ActivityBlock,
   Pitch,
 } from "../types/training-story";
+import type {
+  TrainingAttendancePlayer,
+} from "@/features/attendance";
 
 interface PitchCardProps {
   pitch: Pitch;
+  attendancePlayers: TrainingAttendancePlayer[];
   existingPitches: Pitch[];
   onAddActivityBlock: (
     activityBlock: ActivityBlock
@@ -56,6 +60,7 @@ interface LoadedPlayerCount {
 
 export function PitchCard({
   pitch,
+  attendancePlayers,
   existingPitches,
   onAddActivityBlock,
   onAddActivity,
@@ -68,6 +73,48 @@ export function PitchCard({
 }: PitchCardProps) {
   const [isEditing, setIsEditing] =
     useState(false);
+  const pitchAttendance =
+    pitch.groupId
+      ? attendancePlayers.filter(
+        (player) =>
+          player.groupIds.includes(
+            pitch.groupId!
+          )
+      )
+      : [];
+
+  const attendanceSummary = {
+    total:
+      pitchAttendance.length,
+
+    attending:
+      pitchAttendance.filter(
+        (player) =>
+          player.status ===
+          "attending"
+      ).length,
+
+    absent:
+      pitchAttendance.filter(
+        (player) =>
+          player.status ===
+          "absent"
+      ).length,
+
+    injured:
+      pitchAttendance.filter(
+        (player) =>
+          player.status ===
+          "injured"
+      ).length,
+
+    unknown:
+      pitchAttendance.filter(
+        (player) =>
+          player.status ===
+          "unknown"
+      ).length,
+  };
 
   const [
     loadedPlayerCount,
@@ -121,7 +168,7 @@ export function PitchCard({
 
   const playerCount =
     pitch.groupId &&
-    loadedPlayerCount?.groupId ===
+      loadedPlayerCount?.groupId ===
       pitch.groupId
       ? loadedPlayerCount.count
       : null;
@@ -174,10 +221,9 @@ export function PitchCard({
                   " · Loading..."}
 
                 {playerCount !== null &&
-                  ` · ${playerCount} ${
-                    playerCount === 1
-                      ? "player"
-                      : "players"
+                  ` · ${playerCount} ${playerCount === 1
+                    ? "player"
+                    : "players"
                   }`}
               </span>
             </div>
@@ -189,6 +235,51 @@ export function PitchCard({
                 No player group assigned
               </span>
             </div>
+          )}
+
+          {pitch.groupId ? (
+            <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {attendanceSummary.attending}
+                {" / "}
+                {attendanceSummary.total}
+                {" attending"}
+              </span>
+
+              {attendanceSummary.absent >
+                0 && (
+                  <span>
+                    {
+                      attendanceSummary.absent
+                    }{" "}
+                    absent
+                  </span>
+                )}
+
+              {attendanceSummary.injured >
+                0 && (
+                  <span>
+                    {
+                      attendanceSummary.injured
+                    }{" "}
+                    injured
+                  </span>
+                )}
+
+              {attendanceSummary.unknown >
+                0 && (
+                  <span>
+                    {
+                      attendanceSummary.unknown
+                    }{" "}
+                    unknown
+                  </span>
+                )}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-muted-foreground">
+              No group assigned
+            </p>
           )}
 
           <p className="mt-1 text-sm text-muted-foreground">
