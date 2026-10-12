@@ -1,3 +1,9 @@
-export default function EquipmentPage() {
-  return <h1>Fields</h1>;
+import {
+  PitchBuilderClient,
+} from "@/features/fields";
+
+export default function FieldsPage() {
+  return (
+    <PitchBuilderClient />
+  );
 }
